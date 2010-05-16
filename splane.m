@@ -3,7 +3,7 @@ function t=obj(alpha)
  c=alpha(4);
  n=alpha(1:3);
  n=n/norm(n);
- t=(x*n-c)' * (x*n-c)/N;
+ t=norm(x*n-c)^2/N;
 endfunction
 
 # alpha=[n;c]
@@ -34,3 +34,30 @@ actual=[n;c]
 error_ols=norm(w/norm(w)-n)
 error_cls=norm(v(1:3)-n)
 ratio=error_cls/error_ols
+
+## 
+## octave> source splane.m
+## w =
+## 
+##     9.6452
+##    18.3077
+##   -36.1502
+## 
+## v =
+## 
+##    0.2187917
+##    0.4361913
+##   -0.8728501
+##    0.0047441
+## 
+## actual =
+## 
+##    0.21822
+##    0.43644
+##   -0.87287
+##    0.00000
+## 
+## error_ols =  0.014574
+## error_cls =  6.2408e-04
+## ratio =  0.042821
+## 
