@@ -268,7 +268,9 @@ endfunction
 %! assert(plane(reshape([x;y;z],9,1)),P)
 %! assert(plane([x;y;z]),P)
 
-function t = iterate_over_lists_of_points (fnh,P,partition,opt="rows")
+global iolop_state
+iolop_state=[];
+function t = iterate_over_lists_of_points (fnh,P,partition,opt="rows",is_str=0)
   ## usage:  t = iterate_over_lists_of_points (fnh,P,partition)
   ##
   ## fnh = a function handle
@@ -278,18 +280,40 @@ function t = iterate_over_lists_of_points (fnh,P,partition,opt="rows")
   ## the function fnh should take columns(partition) arguments
   ## e.g.
   ## P = [1,1,1,1;3,1,4,2;1,2,4,5]; partition=[2;2]
-  t=powersets(P,partition,opt);
-  c=columns(partition);
-  rs=cellfun(@rows,t);
-  for i=1:c
-    r=rs(i);
-    a=[];
-    for j=1:r
-      a=[a;getsset(P,i,j,opt)];
+  global iolop_state
+  if is_str==0
+    P=powersets(P,partition,opt);
+    t=iterate_over_lists_of_points(fnh,P,partition,opt,1);
+  elseif is_str==length(P.partition)+1
+    t=fnh(iolop_state);
+    iolop_state=[];
+  else
+    c=columns(partition);
+    rs=cellfun(@rows,P.partition);
+    i=is_str;
+    t=0;
+    for j=1:rs(i)
+      iolop_state=[iolop_state,getsset(P,i,j)];
+      t=t+iterate_over_lists_of_points(fnh,P,partition,opt,i+1);
     endfor
-  endfor
+  endif
 endfunction
 
+global rec_state
+rec_state=[];
+function t = rec (fnh,x)
+  ## usage:  t = rec (fnh,x)
+  ##
+  ## 
+  global rec_state;
+  if length(x)==0
+    t=fnh(rec_state);
+    rec_state=[];
+  else
+    rec_state=[rec_state;x(:,1)];
+    t=rec(fnh,x(:,2:columns(x)));
+  endif
+endfunction
 # P = reshape(1:39,3,13);
 # partition=[4;4;5];
 # iterate_over_lists_of_points(P,partition)
