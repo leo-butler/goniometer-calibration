@@ -78,25 +78,97 @@ function S = powerset (s,n,opt="rows")
       Sd=rowdiff(s,i);
       S=[S;powerset(Sd,n,opt)];
     endfor
+    if opt=="rows"
+      S=unique(S,"rows");
+    endif
   else
     S=[];
   endif
   S;
 endfunction
+
+function f=binomial(n,c=0)
+ if size(n)==[1,1]
+   f=factorial(n)/factorial(n-c)/factorial(c);
+ else
+   f=[];
+   for i=1:columns(n)
+     f=[f,binomial(n(1,i),n(2,i))];
+   endfor
+ endif
+endfunction
 %!test
 %!shared x, p
 %! x=(1:3)';
-%! p=[2,3;1,3;1,2];
+%! p=[1,2;1,3;2,3];
 %! assert(powerset(x,2),p)
 %!test
-%! assert(powerset(x,2,0),reshape(p',6,1))
+%! assert(powerset(x,2,0),[2;3;1;3;1;2])
 %!test
 %! x=(1:6)';
 %! assert(size(powerset(x,5)),[6,5])
 %!test
-%! assert(size(powerset(x,3)),[120,3])
+%! assert(size(powerset(x,3)),[binomial(6,3),3])
 
 
+function s = getsset (S,i,j,opt="rows")
+  ## usage:  s = getsset (S,i,j,opt="rows")
+  ##
+  ## S = cell structure with cells `partition' and `data'
+  ##     S.partition is a cell structure with n partitions
+  ## i<= n is the partition number
+  ## j = the particular subset
+  p=S.partition{i};
+  r=p(j,:);
+  d=S.data;
+  s=[];
+  for k=1:columns(r)
+    s=[s;d(r(k),:)];
+  endfor
+  if opt=="rows"
+    s=reshape(s,1,rows(s)*columns(s));
+  endif
+endfunction
+
+function S = powersets (s,partition,opt="rows")
+  ## usage:  S = powersets (s,partition,opt="rows")
+  ##
+  ## s         = r x c matrix = set of r vectors of length c
+  ## partition = 2 x s matrix of partition + choices
+  ## S         = cell array of powersets of s given partition
+  npartitions=columns(partition);
+  Q=(1:sum(partition(1,:)))';
+  b=1;
+  f=0;
+  for i=1:npartitions
+    f=f+partition(1,i);
+    S.partition{i}=powerset(Q(b:f),partition(2,i));
+    b=f+1;
+  endfor
+  S.data=s;
+endfunction
+%!test
+%! S=powersets((1:6)' , [6;3]);
+%! assert(rows(S.partition{1}),binomial(6,3))
+%!test
+%! partition=[2,2,4;1,2,2];
+%! data=(9:16)';
+%! S=powersets(data , partition);
+%! assert(cellfun(@rows,S.partition),binomial(partition))
+%! assert(S.data,data)
+%! assert(getsset(S,1,1),[9]);
+%! assert(getsset(S,2,1),[11,12]);
+%! assert(getsset(S,3,4),[14,15]);
+%!test
+%! partition=[2,2,4;1,2,2];
+%! data=reshape(1:32,8,4);
+%! S=powersets(data , partition);
+%! assert(cellfun(@rows,S.partition),binomial(partition))
+%! assert(S.data,data)
+%! assert(getsset(S,1,1),data(1,:))
+%! assert(getsset(S,2,1),reshape(data(3:4,:),1,8))
+%! assert(getsset(S,3,3),reshape([data(5,:);data(8,:)],1,8))
+%! assert(getsset(S,3,3,0),[data(5,:);data(8,:)])
 
 function L = intersection_line (P,Q)
   ## usage:  L = intersection_line (P,Q)
@@ -196,28 +268,31 @@ endfunction
 %! assert(plane(reshape([x;y;z],9,1)),P)
 %! assert(plane([x;y;z]),P)
 
-function t = iterate_over_lists_of_points (P,partition)
-  ## usage:  t = iterate_over_lists_of_points (P,partition)
+function t = iterate_over_lists_of_points (fnh,P,partition,opt="rows")
+  ## usage:  t = iterate_over_lists_of_points (fnh,P,partition)
   ##
-  ## P = 3 x n matrix
+  ## fnh = a function handle
+  ## P   = 3 x n matrix
   ## partition = a partition of P into distinct planes
+  ## 
+  ## the function fnh should take columns(partition) arguments
   ## e.g.
   ## P = [1,1,1,1;3,1,4,2;1,2,4,5]; partition=[2;2]
-  npartitions=length(partition);
-  Q=(1:sum(partition))';
-  b=1;
-  f=0;
-  for i=1:npartitions
-    f=f+partition(i);
-    planes{i}=powerset(Q(b:f),3);
-    b=f+1;
+  t=powersets(P,partition,opt);
+  c=columns(partition);
+  rs=cellfun(@rows,t);
+  for i=1:c
+    r=rs(i);
+    a=[];
+    for j=1:r
+      a=[a;getsset(P,i,j,opt)];
+    endfor
   endfor
-  t=planes;
 endfunction
 
-P = reshape(1:39,3,13);
-partition=[4;4;5];
-iterate_over_lists_of_points(P,partition)
+# P = reshape(1:39,3,13);
+# partition=[4;4;5];
+# iterate_over_lists_of_points(P,partition)
 
 function t=obj(alpha)
   ## An affine plane P in R^3 is determined uniquely by a unit normal n
