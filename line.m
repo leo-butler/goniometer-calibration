@@ -218,12 +218,14 @@ endfunction
 function d = line_obj (L,M,W=1)
   ## usage:  d = line_obj (L,M,W=1)
   ##
-  ## 
+  ## L,M are lines in R^3 = [p;v] where p is a point in R^3 closest to 0
+  ## and v is a unit direction vector = 2 x 3 matrix
+  ## W=3x3 weight matrix
   yp=L-M;
-  d=trace(yp * yp');
+  d=trace(yp * W * yp');
   L(2,:)=-L(2,:);
   ym=L-M;
-  d=min([d,trace(ym * ym')]);
+  d=min([d,trace(ym * W * ym')]);
 endfunction
 ## 
 %!test 'exact-zero'
