@@ -235,6 +235,12 @@ endfunction
 %! L=[4,1,0;0,0,-1];
 %! M=intersection_line(P,Q);
 %! assert(line_obj(M,L),0)
+%! M=intersection_line(P',Q);
+%! assert(line_obj(M,L),0)
+%! M=intersection_line(P',Q);
+%! assert(line_obj(M,L),0)
+%! M=intersection_line(P',Q');
+%! assert(line_obj(M,L),0)
 ##
 %!test 'approx-zero'
 %!shared a, P, Q, L, M
@@ -244,6 +250,14 @@ endfunction
 %! L=[4,1,0;0,0,-1];
 %! M=intersection_line(P,Q);
 %! assert(M,L,10*a)
+%! M=intersection_line(P,Q);
+%! assert(line_obj(M,L),0,10*a)
+%! M=intersection_line(P',Q);
+%! assert(line_obj(M,L),0,10*a)
+%! M=intersection_line(P',Q);
+%! assert(line_obj(M,L),0,10*a)
+%! M=intersection_line(P',Q');
+%! assert(line_obj(M,L),0,10*a)
 %!test
 %! assert(line_obj(L,M),0,a)
 %!test
@@ -356,24 +370,43 @@ endfunction
 %! assert(iterate_over_lists_of_points(@(x) [plane(x(1:9)),plane(x(10:18))],data,partition), [plane(data(1,:),data(2,:),data(3,:)),plane(data(4,:),data(5,:),data(6,:))], 1e-8)
 %! assert(iterate_over_lists_of_points(@(x) line_obj(intersection_line(plane(x(1:9)),plane(x(10:18))),L),data,partition), 1)
 
-global rec_state
-rec_state=[];
-function t = rec (fnh,x)
+function t = rec (fnh,x,rec_state=[])
   ## usage:  t = rec (fnh,x)
   ##
-  ## 
-  global rec_state;
+  ## a stupid way to copy x into rec_state
+  t=0;
   if length(x)==0
     t=fnh(rec_state);
-    rec_state=[];
   else
-    rec_state=[rec_state;x(:,1)];
-    t=rec(fnh,x(:,2:columns(x)));
+    rec_state=[rec_state,x(:,1)];
+    t=t+rec(fnh,x(:,2:columns(x)),rec_state);
   endif
 endfunction
-# P = reshape(1:39,3,13);
-# partition=[4;4;5];
-# iterate_over_lists_of_points(P,partition)
+%!test
+%! x=1:5;
+%! assert(rec(@length,x),5)
+%! assert(norm(rec(@(y) y,x)-x),0)
+
+global objectivefn_partition objectivefn_data
+function t = objectivefn (L)
+  ## usage:  t = objectivefn (L)
+  ##
+  ## 
+  global objectivefn_partition objectivefn_data
+  fn = @(x) line_obj(intersection_line(plane(x(1:9)),plane(x(10:18))),L);
+  t = iterate_over_lists_of_points(fn,objectivefn_data,objectivefn_partition);
+endfunction
+%!test
+%! objectivefn_partition=[3,3;3,3];
+%! a=0;
+%! objectivefn_data=[1,0,0;0,1,0;2,1,0; a,0,1;0,1,1;a,2,3];
+%! L=[1,0,0;0,1,0];
+%! assert(objectivefn(L)-1, 0)
+%! objectivefn_data=[4,5.1,0;1,0,0;0,1,0;2,3,0;  1,0,1;3,0,2;4.3,0,-1];
+%! objectivefn_data=[4,5.1,0;1,0,0;0,1,0;2,3,0;  1,0,1;3,0,2;4.3,0,-1],
+%! objectivefn_partition=[4,3;3,3];
+%! L=[0,0,0;1,0,0];
+%! assert(objectivefn(L)-1, 0)
 
 function t=obj(alpha)
   ## An affine plane P in R^3 is determined uniquely by a unit normal n
