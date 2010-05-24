@@ -202,6 +202,12 @@ function L = intersection_line (P,Q)
   catch
     p=P(1:3);
     q=Q(1:3);
+    if rows(p)==3
+      p=p';
+    endif
+    if rows(q)==3
+      q=q';
+    endif
     n=xp(p,q)';
     b=[P(4);Q(4);0];
     pt=([p;q;n] \ b)';
@@ -249,14 +255,25 @@ function P = plane (x,y=1,z=1)
   ##
   ## P = [n;c] = unit normal to plane <n,x>=c
   ## x,y,z = points on P
-  if y==1 && (size(x)==[9,1] || size(x)==[1,9])
+  if y==1 && size(x)==[9,1]
+    ## we assume vectors are 3x1 stacked
     z=x(7:9);
     y=x(4:6);
     x=x(1:3);
+  elseif y==1 && size(x)==[1,9]
+    ## in this case, we want rows of reshaped x
+    x=reshape(x,3,3);
+    z=x(3,:);
+    y=x(2,:);
+    x=x(1,:);
   endif
   n=xp(y-x,z-x);
   n=n/norm(n);
-  c=n' * x;
+  if rows(x)==3
+    c=n' * x;
+  else
+    c=x * n;
+  endif
   P=[n;c];
 endfunction
 %!test
@@ -317,17 +334,25 @@ endfunction
 %! partition=[3,3;1,1];
 %! data=5*ones(6,1);
 %! assert(iterate_over_lists_of_points(@(x) x*x',data,partition), 2 * 5^2 * 3^2) #count #elements
-%! assert(iterate_over_lists_of_points(@ssq,data,partition), 2 * 5^2 * 3^2) #count #elements
+%! assert(iterate_over_lists_of_points(@ssq,data,partition), 2 * 5^2 * 3^2)
 ## WARNING! SLOW
 %!test
 %! partition=[2,3,4;2,2,2];
 %! data=[ones(2,4);ones(3,4)*2;ones(4,4)*5];
 %! N=binomial(2,2)*binomial(3,2)*binomial(4,2);
 %! assert(iterate_over_lists_of_points(@(x) 1,data,partition), N) #count #elements
-%! iterate_over_lists_of_points(@ssq,data,partition)
-%! assert(iterate_over_lists_of_points(@ssq,data,partition), 2*(1^2*4 + 2^2*4 + 5^2*4)*N) #count #elements
-
-
+%! assert(iterate_over_lists_of_points(@ssq,data,partition), 2*(1^2*4 + 2^2*4 + 5^2*4)*N)
+%!test
+%! partition=[3,3;3,3];
+%! a=0;
+%! data=[1,0,0;0,1,0;2,1,0; a,0,1;0,1,1;a,2,3];
+%! L=[1,0,0;0,1,0];
+%! assert(iterate_over_lists_of_points(@(x) 1,data,partition), 1)
+%! assert(iterate_over_lists_of_points(@(x) x,data,partition), [reshape(data(1:3,:),1,9),reshape(data(4:6,:),1,9)])
+%! assert(iterate_over_lists_of_points(@(x) x(1:9),data,partition), reshape(data(1:3,:),1,9))
+%! assert(iterate_over_lists_of_points(@(x) plane(x(1:9)),data,partition), plane(data(1,:),data(2,:),data(3,:)))
+%! assert(iterate_over_lists_of_points(@(x) [plane(x(1:9)),plane(x(10:18))],data,partition), [plane(data(1,:),data(2,:),data(3,:)),plane(data(4,:),data(5,:),data(6,:))], 1e-8)
+%! assert(iterate_over_lists_of_points(@(x) line_obj(intersection_line(plane(x(1:9)),plane(x(10:18))),L),data,partition), 1)
 
 global rec_state
 rec_state=[];
