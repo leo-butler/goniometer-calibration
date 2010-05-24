@@ -128,6 +128,7 @@ function s = getsset (S,i,j,opt="rows")
   if opt=="rows"
     s=reshape(s,1,rows(s)*columns(s));
   endif
+  s;
 endfunction
 
 function S = powersets (s,partition,opt="rows")
@@ -268,9 +269,9 @@ endfunction
 %! assert(plane(reshape([x;y;z],9,1)),P)
 %! assert(plane([x;y;z]),P)
 
-global iolop_state
-iolop_state=[];
-function t = iterate_over_lists_of_points (fnh,P,partition,opt="rows",is_str=0)
+global show_iolop_state
+show_iolop_state=0;
+function t = iterate_over_lists_of_points (fnh,P,partition,opt="rows",is_str=0,rs=0,c=0,iolop_state=[])
   ## usage:  t = iterate_over_lists_of_points (fnh,P,partition)
   ##
   ## fnh = a function handle
@@ -280,24 +281,53 @@ function t = iterate_over_lists_of_points (fnh,P,partition,opt="rows",is_str=0)
   ## the function fnh should take columns(partition) arguments
   ## e.g.
   ## P = [1,1,1,1;3,1,4,2;1,2,4,5]; partition=[2;2]
-  global iolop_state
+  global show_iolop_state
   if is_str==0
     P=powersets(P,partition,opt);
-    t=iterate_over_lists_of_points(fnh,P,partition,opt,1);
-  elseif is_str==length(P.partition)+1
+    rs=cellfun(@rows,P.partition);
+    c=columns(partition);
+    t=iterate_over_lists_of_points(fnh,P,partition,opt,1,rs,c,iolop_state);
+  elseif is_str==c+1
+    if show_iolop_state
+      iolop_state
+    endif
     t=fnh(iolop_state);
     iolop_state=[];
   else
-    c=columns(partition);
-    rs=cellfun(@rows,P.partition);
     i=is_str;
     t=0;
     for j=1:rs(i)
-      iolop_state=[iolop_state,getsset(P,i,j)];
-      t=t+iterate_over_lists_of_points(fnh,P,partition,opt,i+1);
+      s=getsset(P,i,j);
+      t=t+iterate_over_lists_of_points(fnh,P,partition,opt,i+1,rs,c,[iolop_state,s]);
     endfor
   endif
 endfunction
+function t=ssq(x)
+  t=x*x';
+endfunction
+%!test
+%! partition=[2,2,4;1,2,2];
+%! data=reshape(1:32,8,4);
+%! assert(iterate_over_lists_of_points(@(x) 1,data,partition), 12) #count #elements
+%!test
+%! partition=[1,1;1,1];
+%! data=ones(2,1);
+%! assert(iterate_over_lists_of_points(@(x) x*x',data,partition), 2) #count #elements
+%!test
+%! partition=[3,3;1,1];
+%! data=5*ones(6,1);
+%! assert(iterate_over_lists_of_points(@(x) x*x',data,partition), 2 * 5^2 * 3^2) #count #elements
+%! assert(iterate_over_lists_of_points(@ssq,data,partition), 2 * 5^2 * 3^2) #count #elements
+## WARNING! SLOW
+%!test
+%! partition=[2,3,4;2,2,2];
+%! data=[ones(2,4);ones(3,4)*2;ones(4,4)*5];
+%! N=binomial(2,2)*binomial(3,2)*binomial(4,2);
+%! assert(iterate_over_lists_of_points(@(x) 1,data,partition), N) #count #elements
+%! iterate_over_lists_of_points(@ssq,data,partition)
+%! assert(iterate_over_lists_of_points(@ssq,data,partition), 2*(1^2*4 + 2^2*4 + 5^2*4)*N) #count #elements
+
+
 
 global rec_state
 rec_state=[];
