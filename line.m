@@ -387,52 +387,90 @@ endfunction
 %! assert(rec(@length,x),5)
 %! assert(norm(rec(@(y) y,x)-x),0)
 
-global objectivefn_partition objectivefn_data
+global objectivefn_lines;
+function t = __objectivefn_lines(x)
+  ## usage:  t = __objectivefn_lines (x)
+  ##
+  ## x = a 1 x 18 row vector, the first 9 (last 9) defining
+  ##     a plane P (Q).
+  ##
+  ## This function puts the line L in P \cap Q into
+  ## the global variable objectivefn_lines.
+  global objectivefn_lines;
+  objectivefn_lines=[objectivefn_lines;intersection_line(plane(x(1:9)),plane(x(10:18)))];
+  t=1;
+endfunction
+
+function t = make_objectivefn_lines()
+  ## usage:  t = objectivefn_lines ()
+  ##
+  ## This function puts the line L in P \cap Q into
+  ## the global variable objectivefn_lines.
+  global objectivefn_partition objectivefn_data objectivefn_lines;
+  objectivefn_lines=[];
+  t=iterate_over_lists_of_points(@__objectivefn_lines,objectivefn_data,objectivefn_partition);
+endfunction
+
+
+global objectivefn_partition objectivefn_data;
 function t = objectivefn (L)
   ## usage:  t = objectivefn (L)
   ##
-  ## 
-  global objectivefn_partition objectivefn_data
-  fn = @(x) line_obj(intersection_line(plane(x(1:9)),plane(x(10:18))),L);
-  t = iterate_over_lists_of_points(fn,objectivefn_data,objectivefn_partition);
+  ## Given the lines stored in the global variable objectivefn_lines
+  ## this function computes \sum_M d(L,M)^2 
+  global objectivefn_lines;
+  r=rows(objectivefn_lines);
+  t=0;
+  if size(L)!=[2,3]
+    L=reshape(L,3,2)';
+  endif
+  for i=1:2:r
+    M=objectivefn_lines(i:i+1,:);
+    t=t+line_obj(L,M);
+  endfor
 endfunction
 %!test
-%! objectivefn_partition=[3,3;3,3];
 %! a=0;
+%! objectivefn_partition=[3,3;3,3];
 %! objectivefn_data=[1,0,0;0,1,0;2,1,0; a,0,1;0,1,1;a,2,3];
-%! L=[1,0,0;0,1,0];
-%! assert(objectivefn(L)-1, 0)
+%! make_objectivefn_lines();
+%! assert(make_objectivefn_lines(),1);
+%! L=[0,0,0;0,1,0];
+%! assert(objectivefn(L), 0)
+%!test
 %! objectivefn_data=[4,5.1,0;1,0,0;0,1,0;2,3,0;  1,0,1;3,0,2;4.3,0,-1];
-%! objectivefn_data=[4,5.1,0;1,0,0;0,1,0;2,3,0;  1,0,1;3,0,2;4.3,0,-1],
 %! objectivefn_partition=[4,3;3,3];
+%! make_objectivefn_lines();
+%! assert(make_objectivefn_lines(),4);
 %! L=[0,0,0;1,0,0];
-%! assert(objectivefn(L)-1, 0)
-
-function t=obj(alpha)
-  ## An affine plane P in R^3 is determined uniquely by a unit normal n
-  ## and constant c. The pair (n,c) is determined by P up to +-1.
+%! assert(objectivefn(L), 0)
+#%! L=[0,0,0,1,0,0];
+#%! assert(objectivefn(L), 0)
+#%! L=[0;0;0;1;0;0];
+#%! assert(objectivefn(L), 0)
+#%!test
+#%! a=1e-1;
+#%! objectivefn_data=[6.1,7.1,a;4,5.1,0;1,0,0;0,1,0;2,3,0;  1,0,1;3,0,2;4.3,0,-1];
+#%! objectivefn_partition=[5,3;3,3];
+#%! assert(make_objectivefn_lines(),binomial(5,3)*binomial(3,3))
+#%! L=[0,0,0;1,0,0];
+#%! assert(objectivefn(L), 0)
+#
+function C = constraintfn (L)
+  ## usage:  C = constraintfn (L)
   ##
-  ## P : <n,x>=c  <==> (n,c)
-  ##
-  ## Objective function alpha[n;c]:
-  ## 1/N\sum_i^N |<x_i,n>-c|^2
-  global sample_data;
-  x=feval(sample_data);
-  N=rows(x);
-  c=alpha(4);
-  n=alpha(1:3);
-  n=n/norm(n);
-  t=norm(x*n-c)^2/N;
+  ## The line L=[p;v] where p & v are 1x3 row vectors
+  ## and |v|=1, <p,v>=0.
+  ## C = [ <v,v>-1, <p,v> ]
+  if size(L)!=[2,3]
+    L=reshape(L,3,2)';
+  endif
+  C = [ norm(L(2,:))^2 , L(1,:) * L(2,:)' ];
 endfunction
-
-
-function t=norm_constraint(alpha)
-  ## alpha=[n;c]
-  ## return |n|-1
-  t=norm(alpha(1:3))-1;
-endfunction
-
-function v=xp(a,b)
-  ## vector product
-  v=[a(2)*b(3)-a(3)*b(2);-a(1)*b(3)+a(3)*b(1);a(1)*b(2)-a(2)*b(1)];
-endfunction
+%!test
+%! L=[1,2,3; 4,5,6];
+%! assert(constraintfn(L), [4^2+5^2+6^2, 1*4+2*5+3*6], 1e-10)
+%! L=[1;2;3; 4;5;6];
+%! assert(constraintfn(L), [4^2+5^2+6^2, 1*4+2*5+3*6], 1e-10)
+%! L=[1,2,3, 4,5,6];
+%! assert(constraintfn(L), [4^2+5^2+6^2, 1*4+2*5+3*6], 1e-10)
