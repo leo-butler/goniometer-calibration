@@ -215,12 +215,17 @@ function L = intersection_line (P,Q)
     L=[pt;v];
   end_try_catch
 endfunction
-function d = line_obj (L,M,W=1)
-  ## usage:  d = line_obj (L,M,W=1)
+function d = line_obj (L,M,normalise_directions=1,W=1)
+  ## usage:  d = line_obj (L,M,normalise_directions=1,W=1)
   ##
   ## L,M are lines in R^3 = [p;v] where p is a point in R^3 closest to 0
   ## and v is a unit direction vector = 2 x 3 matrix
   ## W=3x3 weight matrix
+  ## normalise_directions=1 ==> make sure |v|=1.
+  if normalise_directions==1
+    L(2,:)/=norm(L(2,:));
+    M(2,:)/=norm(M(2,:));
+  endif
   yp=L-M;
   d=trace(yp * W * yp');
   L(2,:)=-L(2,:);
@@ -284,7 +289,14 @@ function P = plane (x,y=1,z=1)
     x=x(1,:);
   endif
   n=xp(y-x,z-x);
-  n=n/norm(n);
+  try
+    n=n/norm(n);
+  catch
+    x
+    y
+    z
+    error("plane: the normal n=xp(y-x,z-x) is zero.");
+  end_try_catch
   if rows(x)==3
     c=n' * x;
   else
@@ -369,6 +381,12 @@ endfunction
 %! assert(iterate_over_lists_of_points(@(x) plane(x(1:9)),data,partition), plane(data(1,:),data(2,:),data(3,:)))
 %! assert(iterate_over_lists_of_points(@(x) [plane(x(1:9)),plane(x(10:18))],data,partition), [plane(data(1,:),data(2,:),data(3,:)),plane(data(4,:),data(5,:),data(6,:))], 1e-8)
 %! assert(iterate_over_lists_of_points(@(x) line_obj(intersection_line(plane(x(1:9)),plane(x(10:18))),L),data,partition), 1)
+%!xtest
+%! data=reshape(1:18,6,3) .^3;
+%! partition=[3,3;3,3];
+%! assert(iterate_over_lists_of_points(@(x) [plane(x(1:9)),plane(x(10:18))],data,partition), [plane(data(1,:),data(2,:),data(3,:)),plane(data(4,:),data(5,:),data(6,:))], 1e-8)
+
+
 
 function t = rec (fnh,x,rec_state=[])
   ## usage:  t = rec (fnh,x)
@@ -387,6 +405,19 @@ endfunction
 %! assert(rec(@length,x),5)
 %! assert(norm(rec(@(y) y,x)-x),0)
 
+
+function y = at (x,s)
+  ## usage:  y = at (x,s)
+  ##
+  ## 
+  l=length(s);
+  m=length(x);
+  y=zeros(l,1);
+  for i=1:l
+    y(i)=ifelse(1<=s(i) && s(i)<=m, x(s(i)), NaN);
+  endfor
+endfunction
+
 global objectivefn_lines;
 function t = __objectivefn_lines(x)
   ## usage:  t = __objectivefn_lines (x)
@@ -397,7 +428,9 @@ function t = __objectivefn_lines(x)
   ## This function puts the line L in P \cap Q into
   ## the global variable objectivefn_lines.
   global objectivefn_lines;
-  objectivefn_lines=[objectivefn_lines;intersection_line(plane(x(1:9)),plane(x(10:18)))];
+  P=plane(x(1:9));
+  Q=plane(x(10:18));
+  objectivefn_lines=[objectivefn_lines;intersection_line(P,Q)];
   t=1;
 endfunction
 
@@ -436,43 +469,75 @@ function [passes,tests] = __test_objectivefn ()
   ## We use this to workaround the test function's handling of
   ## global variables.
   global objectivefn_partition objectivefn_data objectivefn_lines;
-  ## create a closure with passed,tests
-  ## at the end, we will see if passed=tests
+  ## create a closure with passed,tests,fails
+  ## at the end of the tests, we will see if passed=tests
   passed=0;
   tests=0;
   fails=[];
-  massert=@(x,y,z=0) [passed=passed+(abs(x-y)<=z),tests=tests+1,fails=[fails,ifelse([abs(x-y)>z,tests])]];
+  pt=massert=@(x,y,z=0) [passed=passed+(abs(x-y)<=z),tests=tests+1,fails=[fails,ifelse(abs(x-y)>z,tests)]];
   ## T1
   a=0;
   objectivefn_partition=[3,3;3,3];
   objectivefn_data=[1,0,0;0,1,0;2,1,0; a,0,1;0,1,1;a,2,3];
   make_objectivefn_lines();
-  massert(make_objectivefn_lines(),1);;
+  pt=massert(make_objectivefn_lines(),1);;
   L=[0,0,0;0,1,0];
-  massert(objectivefn(L), 0);
+  pt=massert(objectivefn(L), 0);
   ## T2
   objectivefn_data=[4,5.1,0;1,0,0;0,1,0;2,3,0;  1,0,1;3,0,2;4.3,0,-1];
   objectivefn_partition=[4,3;3,3];
   make_objectivefn_lines();
-  massert(make_objectivefn_lines(),4);;
-  L=[0,0,0;1,0,0];
-  massert(objectivefn(L), 0);
-  L=[0,0,0,1,0,0];
-  massert(objectivefn(L), 0);
-  L=[0;0;0;1;0;0];
-  massert(objectivefn(L), 0);
-  ## T3
-  a=1e-1;
-  objectivefn_data=[6.1,7.1,a;4,5.1,0;1,0,0;0,1,0;2,3,0;  1,0,1;3,0,2;4.3,0,-1];
-  objectivefn_partition=[5,3;3,3];
-  massert(make_objectivefn_lines(),binomial(5,3)*binomial(3,3));
+  pt=massert(make_objectivefn_lines(),4);;
   L=[0,0,0;1,0,0];
   pt=massert(objectivefn(L), 0);
+  L=[0,0,0,1,0,0];
+  pt=massert(objectivefn(L), 0);
+  L=[0;0;0;1;0;0];
+  pt=massert(objectivefn(L), 0);
+  ## T3
+  a=0;
+  objectivefn_data=[6.1,7.1,a;4,5.1,0;1,0,0;0,1,0;2,5,0;  1,0,1;3,0,2;4.3,0,-1];
+  objectivefn_partition=[5,3;3,3];
+  pt=massert(make_objectivefn_lines(),binomial(5,3)*binomial(3,3));
+  L=[0,0,0;1,0,0];
+  pt=massert(objectivefn(L), 0, 10*a);
+  ## T4 test line_estimator
+  epsilon=1e-8;
+  objectivefn_partition=[3,3;3,3];
+  objectivefn_data=[1,0,0;0,1,0;2,1,0; a,0,1;0,1,1;a,2,3];
+  make_objectivefn_lines();
+  pt=massert(make_objectivefn_lines(),1);;
+  L=[0,0,0;0,1,0];
+  L0=[1;2;-1;1/sqrt(2);1/sqrt(2);0];
+  Lest=line_estimator(L0,[],[],35,epsilon);
+  Lest=reshape(Lest,3,2)';
+  pt=massert(norm(L-Lest),0,10*epsilon);
+  ## T5
+  a=0;
+  epsilon=1e-8;
+  objectivefn_data=[6.1,7.1,a;4,5.1,0;1,0,0;0,1,0;2,5,0;  1,0,1;3,0,2;4.3,0,-1];
+  objectivefn_partition=[5,3;3,3];
+  pt=massert(make_objectivefn_lines(),binomial(5,3)*binomial(3,3));
+  L=[0,0,0;1,0,0];
+  L0=[1;2;-1;1/sqrt(2);1/sqrt(2);0];
+  Lest=line_estimator(L0,[],[],35,epsilon);
+  Lest=reshape(Lest,3,2)';
+  pt=massert(line_obj(L,Lest,0),0,10*epsilon);
+  ## T6
+  a=0;
+  epsilon=1e-8;
+  objectivefn_data=[6.1,7.1,a;4,5.1,0;1,0,0;0,1,0;2,5,0;  1,0,1;3,0,2;4.3,0,-1] + 3;
+  objectivefn_partition=[5,3;3,3];
+  pt=massert(make_objectivefn_lines(),binomial(5,3)*binomial(3,3));
+  L=[0,3,3;1,0,0];
+  L0=[1;2;-1;1/sqrt(2);1/sqrt(2);0];
+  Lest=line_estimator(L0,[],[],35,epsilon);
+  Lest=reshape(Lest,3,2)';
+  pt=massert(line_obj(L,Lest,0),0,1e3*epsilon);
+  ##
   passes=pt(1);
   tests=pt(2);
-  if passes!=tests
-    fails=pt(3:length(pt))
-  endif
+  fails=ifelse(passes==tests,"none",pt(3:length(pt)))
   [passes,tests];
 endfunction
 %!xtest
@@ -488,12 +553,26 @@ function C = constraintfn (L)
   if size(L)!=[2,3]
     L=reshape(L,3,2)';
   endif
-  C = [ norm(L(2,:))^2 , L(1,:) * L(2,:)' ];
+  ##Surprisingly, the estimator works better with the
+  ##scalar constraint. Maybe this is worth investigating?
+  ##C = [ (norm(L(2,:))^2-1)^2 ; L(1,:) * L(2,:)' ];
+  C = [ (norm(L(2,:))^2-1)^2 + (L(1,:) * L(2,:)')^2 ];
 endfunction
 %!test
 %! L=[1,2,3; 4,5,6];
-%! assert(constraintfn(L), [4^2+5^2+6^2, 1*4+2*5+3*6], 1e-10)
+%! scalar_constraint=1;
+%! c=ifelse(scalar_constraint,[(4^2+5^2+6^2-1)^2 + (1*4+2*5+3*6)^2],[(4^2+5^2+6^2-1)^2 ;  1*4+2*5+3*6]);
+%! epsilon=1e-10;
+%! assert(constraintfn(L), c, epsilon);
 %! L=[1;2;3; 4;5;6];
-%! assert(constraintfn(L), [4^2+5^2+6^2, 1*4+2*5+3*6], 1e-10)
+%! assert(constraintfn(L), c, epsilon);
 %! L=[1,2,3, 4,5,6];
-%! assert(constraintfn(L), [4^2+5^2+6^2, 1*4+2*5+3*6], 1e-10)
+%! assert(constraintfn(L), c, epsilon);
+
+function [L,obj,info,iter,nf,lambda] = line_estimator (L0,LUP=[],LOW=[],maxiter=25,epsilon=1e-6)
+  ## usage:  [L,obj,info,iter,nf,lambda] = line_estimator (L0,LUP,LOW,maxiter,epsilon)
+  ##
+  ## estimates L given L0 (a 6x1 column vector)
+  make_objectivefn_lines();
+  [L,obj,info,iter,nf,lambda]=sqp(L0,@objectivefn,@constraintfn,[],LUP,LOW,maxiter,epsilon);
+endfunction
