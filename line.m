@@ -429,33 +429,56 @@ function t = objectivefn (L)
     t=t+line_obj(L,M);
   endfor
 endfunction
-%!test
-%! a=0;
-%! objectivefn_partition=[3,3;3,3];
-%! objectivefn_data=[1,0,0;0,1,0;2,1,0; a,0,1;0,1,1;a,2,3];
-%! make_objectivefn_lines();
-%! assert(make_objectivefn_lines(),1);
-%! L=[0,0,0;0,1,0];
-%! assert(objectivefn(L), 0)
-%!test
-%! objectivefn_data=[4,5.1,0;1,0,0;0,1,0;2,3,0;  1,0,1;3,0,2;4.3,0,-1];
-%! objectivefn_partition=[4,3;3,3];
-%! make_objectivefn_lines();
-%! assert(make_objectivefn_lines(),4);
-%! L=[0,0,0;1,0,0];
-%! assert(objectivefn(L), 0)
-#%! L=[0,0,0,1,0,0];
-#%! assert(objectivefn(L), 0)
-#%! L=[0;0;0;1;0;0];
-#%! assert(objectivefn(L), 0)
-#%!test
-#%! a=1e-1;
-#%! objectivefn_data=[6.1,7.1,a;4,5.1,0;1,0,0;0,1,0;2,3,0;  1,0,1;3,0,2;4.3,0,-1];
-#%! objectivefn_partition=[5,3;3,3];
-#%! assert(make_objectivefn_lines(),binomial(5,3)*binomial(3,3))
-#%! L=[0,0,0;1,0,0];
-#%! assert(objectivefn(L), 0)
-#
+
+function [passes,tests] = __test_objectivefn ()
+  ## usage:  [passes,tests] = __test_objectivefn ()
+  ##
+  ## We use this to workaround the test function's handling of
+  ## global variables.
+  global objectivefn_partition objectivefn_data objectivefn_lines;
+  ## create a closure with passed,tests
+  ## at the end, we will see if passed=tests
+  passed=0;
+  tests=0;
+  fails=[];
+  massert=@(x,y,z=0) [passed=passed+(abs(x-y)<=z),tests=tests+1,fails=[fails,ifelse([abs(x-y)>z,tests])]];
+  ## T1
+  a=0;
+  objectivefn_partition=[3,3;3,3];
+  objectivefn_data=[1,0,0;0,1,0;2,1,0; a,0,1;0,1,1;a,2,3];
+  make_objectivefn_lines();
+  massert(make_objectivefn_lines(),1);;
+  L=[0,0,0;0,1,0];
+  massert(objectivefn(L), 0);
+  ## T2
+  objectivefn_data=[4,5.1,0;1,0,0;0,1,0;2,3,0;  1,0,1;3,0,2;4.3,0,-1];
+  objectivefn_partition=[4,3;3,3];
+  make_objectivefn_lines();
+  massert(make_objectivefn_lines(),4);;
+  L=[0,0,0;1,0,0];
+  massert(objectivefn(L), 0);
+  L=[0,0,0,1,0,0];
+  massert(objectivefn(L), 0);
+  L=[0;0;0;1;0;0];
+  massert(objectivefn(L), 0);
+  ## T3
+  a=1e-1;
+  objectivefn_data=[6.1,7.1,a;4,5.1,0;1,0,0;0,1,0;2,3,0;  1,0,1;3,0,2;4.3,0,-1];
+  objectivefn_partition=[5,3;3,3];
+  massert(make_objectivefn_lines(),binomial(5,3)*binomial(3,3));
+  L=[0,0,0;1,0,0];
+  pt=massert(objectivefn(L), 0);
+  passes=pt(1);
+  tests=pt(2);
+  if passes!=tests
+    fails=pt(3:length(pt))
+  endif
+  [passes,tests];
+endfunction
+%!xtest
+%! [passes,tests]=__test_objectivefn();
+%! assert(passes,tests)
+
 function C = constraintfn (L)
   ## usage:  C = constraintfn (L)
   ##
