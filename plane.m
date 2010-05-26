@@ -48,34 +48,6 @@ function v=xp(a,b)
   v=[a(2)*b(3)-a(3)*b(2);-a(1)*b(3)+a(3)*b(1);a(1)*b(2)-a(2)*b(1)];
 endfunction
 
-function [y,n]=make_almost_planar_data(v1,v2,p,k,epsilon,grid=1)
-  ## [y,n]=make_almost_planar_data(v1,v2,p,k,epsilon)
-  ##
-  ## v1, v2 are independent 3-vectors parallel to plane P
-  ## p is a 3-vector in P
-  ## k is number of points
-  ## epsilon is std. dev. of errors
-  ##
-  ## y is k x 3 vector of points close to P
-  ## n is a unit normal to P
-  n=xp(v1,v2);
-  n=n/norm(n);
-  if grid==1
-    c=1;
-    for i=-k:k
-      for j=-k:k
-	y(c,1:3)=p+i*v1+j*v2+normrnd(0,epsilon,3,1);
-	++c;
-      endfor;
-    endfor;
-  else
-    for i=1:k
-      y(i,1:3)=p+normrnd(0,1)*v1+normrnd(0,1)*v2+normrnd(0,epsilon,3,1);
-    endfor;
-  endif;
-  [y',n];
-endfunction
-
 
 function error = estimator_error (x,v,use_constant=1)
   ## usage:  error = estimator_error (x,v)
