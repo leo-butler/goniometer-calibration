@@ -1,0 +1,2 @@
+-- function errors = line_estimator_error (P,epsilon,randstate,N=2,grid=1)
+/^function\s+\(?:\[*\(?:\(?:[[:alnum:]_]+\)+,*\)*\]*\s*=*\s*\([[:alnum:]_]+\)/\1/i
