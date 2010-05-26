@@ -23,30 +23,27 @@
 source line.m
 source make_almost_planar_data.m
 
-function errors = line_estimator_error (P,epsilon,randstate,N=2,grid=1)
-  ## usage:  errors = line_estimator_error (P,epsilon,randstate,N,grid=1)
+function errors = line_estimator_error (P,sigma,randstate,epsilon,Lactual,N=2,grid=1,niter=45)
+  ## usage:  errors = line_estimator_error (P,sigma,randstate,epsilon,Lactual,N=2,grid=1,niter=45)
   ##
   ## P         = 4 x N matrix of planes (each column is a unit normal; const)
   ## randstate = seed for rng
-  ## epsilon   = std. dev. of noise
+  ## sigma   = std. dev. of noise
   ## N         = number of samples
   global sample_data objectivefn_data objectivefn_partition;
-
+  L0=reshape(Lactual + sigma*randn(2,3),6,1);
   for i=1:N
-    make_objectivefn_data(P,epsilon,randstate,grid);
+    make_objectivefn_data(P,sigma,randstate,grid)
     make_objectivefn_lines();
-    Lest=line_estimator(L0,[],[],35,epsilon);
-    Lest=reshape(Lest,3,2)';
-    errors(j,1:3)=[i,
-		   estimator_error(v,n,use_constant),
- 		   estimator_error(w,n,use_constant)];
-    ++j;
+    Lest=line_estimator(L0,[],[],niter,epsilon);
+    Lest=reshape(Lest,3,2)'
+    errors(i,:)=[i,line_obj(Lactual,Lest)];
   endfor
   errors;
 endfunction
 
-function t = make_objectivefn_data (P,epsilon,randstate,grid=1)
-  ## usage:  t = make_objectivefn_data (P,epsilon,grid=1)
+function t = make_objectivefn_data (P,sigma,randstate,grid=1)
+  ## usage:  t = make_objectivefn_data (P,sigma,grid=1)
   ##
   ## P = 4 x N matrix of planes (each column is a unit normal; const)
   ## 
@@ -62,7 +59,7 @@ function t = make_objectivefn_data (P,epsilon,randstate,grid=1)
     [x,y]=plane_basis(p);
     k=objectivefn_partition(1,i);
     objectivefn_data=[objectivefn_data;
-		      make_almost_planar_data(x,y,q,k,epsilon,grid)];
+		      make_almost_planar_data(x,y,q,k,sigma,grid)];
   endfor
   t=size(objectivefn_data);
 endfunction
@@ -77,12 +74,12 @@ function [passes,tests] = __test_make_objectivefn_data ()
   randn("state",randstate);
   passed=0;tests=0;fails=[];
   massert=@(x,y,z=0) [passed=passed+(abs(x-y)<=z),tests=tests+1,fails=[fails,ifelse(abs(x-y)>z,tests)]];
-  epsilon=1e-1;
+  sigma=1e-1;
   objectivefn_data=[];
   objectivefn_partition=[3,3;3,3];
   planes=[1,0,0,1;0,1,0,3]';
   grid=0;
-  s=make_objectivefn_data(planes,epsilon,randstate,grid);
+  s=make_objectivefn_data(planes,sigma,randstate,grid);
   pt=massert(s,[sum(objectivefn_partition(1,:)),3]);
   objectivefn_data_e=[1.029638,1.625995,2.027675;
 		      1.145820,1.856540,1.525217;
@@ -94,7 +91,7 @@ function [passes,tests] = __test_make_objectivefn_data ()
   ##
   grid=1;
   objectivefn_partition=[9,9;3,3];
-  s=make_objectivefn_data(planes,epsilon,randstate,grid);
+  s=make_objectivefn_data(planes,sigma,randstate,grid);
   pt=massert(s,[sum(objectivefn_partition(1,:)),3]);
   objectivefn_data_e=[1.1050384,0.0437464,-1.3652189;
 		      1.0274723,0.6754998,-0.7905142;
@@ -115,6 +112,16 @@ function [passes,tests] = __test_make_objectivefn_data ()
 		      1.5230199,0.1012874,-0.8039618;
 		      2.3901369,0.0314681,-0.3437618];
   pt=massert(norm(objectivefn_data-objectivefn_data_e),0,1e-8);
+  ##
+  randn("state",randstate);
+  planes
+  objectivefn_partition=[4,3;3,3];
+  Lactual=intersection_line(planes(:,1),planes(:,2))
+  epsilon=1e-5;
+  N=2;
+  grid=0;
+  sigma=1e-10;
+  errors=line_estimator_error(planes,sigma,randstate,epsilon,Lactual,N,grid)
   ##
   passes=pt(1);
   tests=pt(2);
