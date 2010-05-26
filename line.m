@@ -474,7 +474,7 @@ function [passes,tests] = __test_objectivefn ()
   passed=0;
   tests=0;
   fails=[];
-  pt=massert=@(x,y,z=0) [passed=passed+(abs(x-y)<=z),tests=tests+1,fails=[fails,ifelse(abs(x-y)>z,tests)]];
+  massert=@(x,y,z=0) [passed=passed+(abs(x-y)<=z),tests=tests+1,fails=[fails,ifelse(abs(x-y)>z,tests)]];
   ## T1
   a=0;
   objectivefn_partition=[3,3;3,3];
@@ -576,3 +576,11 @@ function [L,obj,info,iter,nf,lambda] = line_estimator (L0,LUP=[],LOW=[],maxiter=
   make_objectivefn_lines();
   [L,obj,info,iter,nf,lambda]=sqp(L0,@objectivefn,@constraintfn,[],LUP,LOW,maxiter,epsilon);
 endfunction
+
+#####################################################################
+
+
+
+##
+##
+## end of line.m
