@@ -23,8 +23,8 @@
 source line.m
 source make_almost_planar_data.m
 
-function errors = line_estimator_error (P,sigma,randstate,epsilon,Lactual,N=2,grid=1,niter=45)
-  ## usage:  errors = line_estimator_error (P,sigma,randstate,epsilon,Lactual,N=2,grid=1,niter=45)
+function [errors,Lests] = line_estimator_error (P,sigma,randstate,epsilon,Lactual,N=2,grid=1,niter=45)
+  ## usage:  [errors,Lests] = line_estimator_error (P,sigma,randstate,epsilon,Lactual,N=2,grid=1,niter=45)
   ##
   ## P         = 4 x N matrix of planes (each column is a unit normal; const)
   ## randstate = seed for rng
@@ -32,14 +32,17 @@ function errors = line_estimator_error (P,sigma,randstate,epsilon,Lactual,N=2,gr
   ## N         = number of samples
   global sample_data objectivefn_data objectivefn_partition;
   L0=reshape(Lactual + sigma*randn(2,3),6,1);
+  errors=zeros(N,1);
+  Lests=zeros(N,6);
   for i=1:N
-    make_objectivefn_data(P,sigma,randstate,grid)
+    make_objectivefn_data(P,sigma,randstate,grid);
     make_objectivefn_lines();
     Lest=line_estimator(L0,[],[],niter,epsilon);
-    Lest=reshape(Lest,3,2)'
-    errors(i,:)=[i,line_obj(Lactual,Lest)];
+    Lestr=reshape(Lest,3,2)';
+    errors(i)=line_obj(Lactual,Lestr);
+    Lests(i,:)=Lest';
   endfor
-  errors;
+  [errors,Lests];
 endfunction
 
 function t = make_objectivefn_data (P,sigma,randstate,grid=1)
@@ -55,7 +58,7 @@ function t = make_objectivefn_data (P,sigma,randstate,grid=1)
   endif
   for i=1:lenp
     p=P(:,i);
-    q=point_on_plane(P);
+    q=point_on_plane(p);
     [x,y]=plane_basis(p);
     k=objectivefn_partition(1,i);
     objectivefn_data=[objectivefn_data;
@@ -114,14 +117,24 @@ function [passes,tests] = __test_make_objectivefn_data ()
   pt=massert(norm(objectivefn_data-objectivefn_data_e),0,1e-8);
   ##
   randn("state",randstate);
-  planes
   objectivefn_partition=[4,3;3,3];
-  Lactual=intersection_line(planes(:,1),planes(:,2))
+  Lactual=intersection_line(planes(:,1),planes(:,2));
   epsilon=1e-5;
-  N=2;
+  N=10;
   grid=0;
   sigma=1e-10;
   errors=line_estimator_error(planes,sigma,randstate,epsilon,Lactual,N,grid)
+  pt=massert(norm(errors)/N,0,1e3*sigma);
+  ##
+  randn("state",randstate);
+  objectivefn_partition=[6,6;3,3];
+  Lactual=intersection_line(planes(:,1),planes(:,2));
+  epsilon=1e-5;
+  N=10;
+  grid=0;
+  sigma=1e-1;
+  errors=line_estimator_error(planes,sigma,randstate,epsilon,Lactual,N,grid)
+  pt=massert(norm(errors)/N,0,sigma);
   ##
   passes=pt(1);
   tests=pt(2);
