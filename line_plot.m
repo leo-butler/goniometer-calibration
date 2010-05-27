@@ -20,7 +20,7 @@
 ## along with this file. If not, see http://www.gnu.org/licenses/.
 ##
 
-source line.m
+source objectivefn.m
 
 function t = line_plot ()
   ## usage:  t = line_plot ()
@@ -33,12 +33,12 @@ function t = line_plot ()
   f=0;
   hold off;
   for i=1:length(len)
-    f=len(i)
+    f=f+len(i);
     plot3(objectivefn_data(b:f,1),objectivefn_data(b:f,2),objectivefn_data(b:f,3),symbols(i));
     hold on;
-    b=f
+    b=f+1;
   endfor
-#  hold off;
+  hold off;
   t=1;
 endfunction
 

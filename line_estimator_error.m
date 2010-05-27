@@ -20,7 +20,7 @@
 ## along with this file. If not, see http://www.gnu.org/licenses/.
 ##
 
-source line.m
+source objectivefn.m
 source make_almost_planar_data.m
 
 function [errors,Lests] = line_estimator_error (P,sigma,randstate,epsilon,Lactual,N=2,grid=1,niter=45)

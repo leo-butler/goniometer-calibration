@@ -584,5 +584,4 @@ endfunction
 
 ##
 ##
-## end of line.m
-
+## end of objectivefn.m
