@@ -33,10 +33,10 @@ function t = line_plot ()
   f=0;
   hold off;
   for i=1:length(len)
-    f=i;
+    f=len(i)
     plot3(objectivefn_data(b:f,1),objectivefn_data(b:f,2),objectivefn_data(b:f,3),symbols(i));
     hold on;
-    b=f;
+    b=f
   endfor
 #  hold off;
   t=1;
