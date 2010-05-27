@@ -43,7 +43,7 @@ function t=norm_constraint(alpha)
   t=norm(alpha(1:3))-1;
 endfunction
 
-function v=xp(a,b)
+function v=vector_product(a,b)
   ## vector product
   v=[a(2)*b(3)-a(3)*b(2);-a(1)*b(3)+a(3)*b(1);a(1)*b(2)-a(2)*b(1)];
 endfunction
@@ -169,3 +169,6 @@ plot(errors(:,1),errors(:,3),"*;ols;",errors(:,1),errors(:,2),"+;constrained lsq
 plot(e_n,mean(e_cls),"+",e_n,mean(e_ols),"*")
 hold off;
 print -deps errors.eps
+
+## end of plane.m
+

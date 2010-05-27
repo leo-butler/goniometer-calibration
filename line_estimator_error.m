@@ -189,3 +189,6 @@ endfunction
 %! [x,y]=plane_basis(P);
 %! q=[n,x,y];
 %! assert( norm(q' * q - eye(3)), 0, epsilon)
+
+## end of line_estimator_error.m
+

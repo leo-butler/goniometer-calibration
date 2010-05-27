@@ -102,3 +102,6 @@ function cleandir(mdir, verbose)
   end_unwind_protect
   if (verbose) printf("Directory '%s' removed\n", mdir); endif
 endfunction
+
+## end of movie.m
+

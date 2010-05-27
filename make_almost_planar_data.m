@@ -32,7 +32,7 @@ function [y,n]=make_almost_planar_data(v1,v2,p,k,sigma,grid=1,rows=1)
   ##
   ## y is k x 3 (row=1) vector of points close to P
   ## n is a unit normal to P
-  n=xp(v1,v2);
+  n=vector_product(v1,v2);
   n=n/norm(n);
   if grid==1
     c=1;
@@ -84,3 +84,4 @@ endfunction
 ##
 ##
 ## end of make_almost_planar_data.m
+

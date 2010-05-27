@@ -23,3 +23,6 @@ endfunction
 %! assert(ifelse(0,2,3),3)
 %! assert(ifelse(0,2,0,3,1,4),4)
 %! assert(ifelse(0,2,0,3,1),1)
+
+## end of ifelse.m
+

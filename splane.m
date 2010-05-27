@@ -61,3 +61,6 @@ ratio=error_cls/error_ols
 ## error_cls =  6.2408e-04
 ## ratio =  0.042821
 ## 
+
+## end of splane.m
+

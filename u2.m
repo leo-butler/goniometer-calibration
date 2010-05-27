@@ -18,3 +18,6 @@ function u = u2(rnd=1,sigma=0.0)
     u(:,2) = u(:,2)/norm(u(:,2),2)
   endif
 endfunction
+
+## end of u2.m
+

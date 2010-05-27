@@ -20,14 +20,14 @@
 ## along with this file. If not, see http://www.gnu.org/licenses/.
 ##
 
-function v=xp(a,b)
+function v=vector_product(a,b)
   ## vector product
   v=[a(2)*b(3)-a(3)*b(2);-a(1)*b(3)+a(3)*b(1);a(1)*b(2)-a(2)*b(1)];
 endfunction
 %!test
-%! assert(xp([1;0;0],[0;1;0]),[0;0;1])
-%! assert(xp([0;1;0],[0;0;1]),[1;0;0])
-%! assert(xp([0;0;1],[1;0;0]),[0;1;0])
+%! assert(vector_product([1;0;0],[0;1;0]),[0;0;1])
+%! assert(vector_product([0;1;0],[0;0;1]),[1;0;0])
+%! assert(vector_product([0;0;1],[1;0;0]),[0;1;0])
 
 function y = rowdiff (a,i)
   ## usage:  y = rowdiff (a,i)
@@ -208,7 +208,7 @@ function L = intersection_line (P,Q)
     if rows(q)==3
       q=q';
     endif
-    n=xp(p,q)';
+    n=vector_product(p,q)';
     b=[P(4);Q(4);0];
     pt=([p;q;n] \ b)';
     v=n/norm(n);
@@ -288,14 +288,14 @@ function P = plane (x,y=1,z=1)
     y=x(2,:);
     x=x(1,:);
   endif
-  n=xp(y-x,z-x);
+  n=vector_product(y-x,z-x);
   try
     n=n/norm(n);
   catch
     x
     y
     z
-    error("plane: the normal n=xp(y-x,z-x) is zero.");
+    error("plane: the normal n=vector_product(y-x,z-x) is zero.");
   end_try_catch
   if rows(x)==3
     c=n' * x;
@@ -584,3 +584,4 @@ endfunction
 ##
 ##
 ## end of line.m
+

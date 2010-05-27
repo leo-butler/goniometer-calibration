@@ -5,3 +5,6 @@ function s=ssum(f,i,a,b)
   endfor
   s;
 endfunction
+
+## end of ssum.m
+
