@@ -20,16 +20,17 @@
 ## along with this file. If not, see http://www.gnu.org/licenses/.
 ##
 
-source objectivefn.m
+#source objectivefn.m
+source goniometer.m
 
-function [Lest_mc,obj_mc,info_mc,iter_mc,nf_mc,lambda_mc] = goniometer_error (filename,sigma,randstate,epsilon,N=2,grid=1,niter=45)
-  ## usage:  [Lest_mc,obj_mc,info_mc,iter_mc,nf_mc,lambda_mc] = goniometer_error (P,sigma,randstate,epsilon,N=2,grid=1,niter=45)
+function [Lest_mc,obj_mc,info_mc,iter_mc,nf_mc,lambda_mc] = goniometer_error (filename,sigma,randstate,epsilon,N=2,niter=45)
+  ## usage:  [Lest_mc,obj_mc,info_mc,iter_mc,nf_mc,lambda_mc] = goniometer_error (P,sigma,randstate,epsilon,N=2,niter=45)
   ##
   ## filename  = string-name of goniometer data file
   ## randstate = seed for rng
   ## sigma   = 3-vector of st. dev.
   ## N         = number of monte carlo draws
-  global sample_data objectivefn_data objectivefn_partition;
+  global sample_data objectivefn_data objectivefn_partition objectivefn_lines;
   ## read data and estimate line
   goniometer_data=read_goniometer_data(filename);
   [tdata,tpartition]=gpartition(goniometer_data);
@@ -69,77 +70,26 @@ function [Lest_mc,obj_mc,info_mc,iter_mc,nf_mc,lambda_mc] = goniometer_error (fi
     nf_mc(:,i)=nf;
     lambda_mc(:,i)=lambda;
   endfor
-  [Lest_mc,obj_mc,info_mc,iter_mc,nf_mc,lambda_mc];
+  #[Lest_mc,obj_mc,info_mc,iter_mc,nf_mc,lambda_mc];
 endfunction
 
 
-function [passes,tests] = __test_make_objectivefn_data ()
+function [passes,tests] = __test_goniometer_error ()
   ## usage:  [passes,tests] = __test_make_objectivefn_data ()
   ##
   ## 
-  global objectivefn_data objectivefn_partition;
+  global objectivefn_data objectivefn_partition objectivefn_lines;
   load randstate.m
   randn("state",randstate);
   passed=0;tests=0;fails=[];
   massert=@(x,y,z=0) [passed=passed+(abs(x-y)<=z),tests=tests+1,fails=[fails,ifelse(abs(x-y)>z,tests)]];
-  sigma=1e-1;
-  objectivefn_data=[];
-  objectivefn_partition=[3,3;3,3];
-  planes=[1,0,0,1;0,1,0,3]';
-  grid=0;
-  s=make_objectivefn_data(planes,sigma,randstate,grid);
-  pt=massert(s,[sum(objectivefn_partition(1,:)),3]);
-  objectivefn_data_e=[1.029638,1.625995,2.027675;
-		      1.145820,1.856540,1.525217;
-		      1.142279,0.804958,1.425524;
-		      0.703794,0.066098,0.370574;
-		      0.940052,-0.094277,-0.343306;
-		      -0.443985,0.056030,0.062162];
-  pt=massert(norm(objectivefn_data-objectivefn_data_e),0,1e-8);
-  ##
-  grid=1;
-  objectivefn_partition=[9,9;3,3];
-  s=make_objectivefn_data(planes,sigma,randstate,grid);
-  pt=massert(s,[sum(objectivefn_partition(1,:)),3]);
-  objectivefn_data_e=[1.1050384,0.0437464,-1.3652189;
-		      1.0274723,0.6754998,-0.7905142;
-		      1.0825787,1.5074216,0.0979670;
-		      1.0081138,-0.7746758,-0.8594979;
-		      0.9980917,-0.0063265,-0.0932748;
-		      0.8571794,0.6400182,0.7411083;
-		      1.0310877,-1.3200993,-0.0641696;
-		      0.8459808,-0.8546383,0.6668978;
-		      1.0363867,0.0900712,1.5401248;
-		      -0.2498744,0.0420659,0.4007926;
-		      0.4596004,-0.1075565,0.8436256;
-		      1.1968019,-0.1864067,1.5568657;
-		      -0.0374446,0.1066739,-0.4810517;
-		      1.0506292,0.0985603,-0.0854467;
-		      1.8510865,-0.0177533,0.4006236;
-		      0.7142547,-0.1340674,-1.4114715;
-		      1.5230199,0.1012874,-0.8039618;
-		      2.3901369,0.0314681,-0.3437618];
-  pt=massert(norm(objectivefn_data-objectivefn_data_e),0,1e-8);
-  ##
-  randn("state",randstate);
-  objectivefn_partition=[4,3;3,3];
-  Lactual=intersection_line(planes(:,1),planes(:,2));
-  epsilon=1e-5;
-  N=10;
-  grid=0;
-  sigma=1e-10;
-  errors=line_estimator_error(planes,sigma,randstate,epsilon,Lactual,N,grid)
-  pt=massert(norm(errors)/N,0,1e3*sigma);
-  ##
-  randn("state",randstate);
-  objectivefn_partition=[6,6;3,3];
-  Lactual=intersection_line(planes(:,1),planes(:,2));
-  epsilon=1e-5;
-  N=10;
-  grid=0;
-  sigma=1e-1;
-  errors=line_estimator_error(planes,sigma,randstate,epsilon,Lactual,N,grid)
-  pt=massert(norm(errors)/N,0,sigma);
+  filename="goniometer.dat";
+  sigma=1e-1*ones(3,1);
+  epsilon=1e-8;
+  niter=35;
+  N=1;
+  [Lest_mc,obj_mc,info_mc,iter_mc,nf_mc,lambda_mc] = goniometer_error (filename,sigma,randstate,epsilon,N=2,niter=45)
+#  pt=massert(norm(objectivefn_data-objectivefn_data_e),0,1e-8);
   ##
   passes=pt(1);
   tests=pt(2);
@@ -147,52 +97,7 @@ function [passes,tests] = __test_make_objectivefn_data ()
   [passes,tests];
 endfunction
 %!test
-%! [passes,tests]=__test_make_objectivefn_data();
+%! [passes,tests]=__test_goniometer_error();
 %! assert(passes,tests)
-
-function p = point_on_plane (P,rowv=0)
-  ## usage:  p = point_on_plane (P)
-  ##
-  ## returns closest point p on P to 0.
-  p=P(1:3) * P(4);
-  if rowv
-    p=reshape(p,1,3);
-  else
-    p=reshape(p,3,1);
-  endif
-endfunction
-%!test
-%! epsilon=1e-8;
-%! P=[1;0;0;3];
-%! p=point_on_plane(P);
-%! q=[3;0;0];
-%! assert(p,q,epsilon)
-
-function [x,y] = plane_basis (P)
-  ## usage:  [x,y] = plane_basis (P)
-  ##
-  ## P is a plane, [x,y] is an o.n. basis of plane P'
-  ## through 0 parallel to P.
-  n=P(1:3);
-  a=[n,normrnd(0,1,3,2)];
-  [q,r]=qr(a);
-  x=q(:,2);
-  y=q(:,3);
-endfunction
-%!test
-%! epsilon=1e-8;
-%! n=[1;0;0];
-%! P=[n;1];
-%! [x,y]=plane_basis(P);
-%! q=[n,x,y];
-%! assert( norm(q' * q - eye(3)), 0, epsilon)
-%!test
-%! epsilon=1e-8;
-%! n=normrnd(0,1,3,1);
-%! n=n/norm(n);
-%! P=[n;1];
-%! [x,y]=plane_basis(P);
-%! q=[n,x,y];
-%! assert( norm(q' * q - eye(3)), 0, epsilon)
 
 ## end of goniometer_error.m
