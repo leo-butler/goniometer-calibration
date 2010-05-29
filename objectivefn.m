@@ -254,7 +254,7 @@ function d = line_obj (L,M,normalise_directions=1,W=1)
   if line_obj_use_acos
     yp=L-M;
     d=yp(1,:) * yp(1,:)';
-    s=sin(acos(L(2,:) * M(2,:)'));
+    s=acos(L(2,:) * M(2,:)');
     d=d+s;
   else
     yp=L-M;
@@ -482,11 +482,11 @@ endfunction
 %! global objectivefn_lines;
 %! objectivefn_lines=[];
 %! N=4;
-%! P=(1:(N*9)).^3
+%! P=(1:(N*9)).^3;
 %! assert(__objectivefn_lines(P),binomial(N,2));
 %! objectivefn_lines=[];
 %! N=5;
-%! P=(1:(N*9)).^3
+%! P=(1:(N*9)).^3;
 %! assert(__objectivefn_lines(P),binomial(N,2));
 
 function t = make_objectivefn_lines()
