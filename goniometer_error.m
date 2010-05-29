@@ -23,6 +23,7 @@
 #source objectivefn.m
 source goniometer.m
 
+global sample_data objectivefn_data objectivefn_partition objectivefn_lines;
 function [Lest_mc,obj_mc,info_mc,iter_mc,nf_mc,lambda_mc] = goniometer_error (filename,sigma,randstate,epsilon,N=2,niter=45)
   ## usage:  [Lest_mc,obj_mc,info_mc,iter_mc,nf_mc,lambda_mc] = goniometer_error (P,sigma,randstate,epsilon,N=2,niter=45)
   ##
@@ -36,9 +37,11 @@ function [Lest_mc,obj_mc,info_mc,iter_mc,nf_mc,lambda_mc] = goniometer_error (fi
   [tdata,tpartition]=gpartition(goniometer_data);
   objectivefn_data=tdata;
   objectivefn_partition=tpartition;
+  goniometer_rebase_zdata()
   make_objectivefn_lines();
   L0=reshape(objectivefn_lines(1:2,:)',6,1);
-  [Lest,obj,info,iter,nf,lambda]=line_estimator(L0,[],[],niter,epsilon);
+  [Lest,obj,info,iter,nf,lambda]=line_estimator(L0,[],[],niter,epsilon)
+  cons=constraintfn(Lest)
   ## create arrays holding data
   Lest_mc=zeros(rows(Lest),N+1);
   Lest_mc(:,1)=Lest;
@@ -52,6 +55,7 @@ function [Lest_mc,obj_mc,info_mc,iter_mc,nf_mc,lambda_mc] = goniometer_error (fi
   nf_mc(:,1)=nf;
   lambda_mc=zeros(rows(lambda),N+1);
   lambda_mc(:,1)=lambda;
+  cons_mc(:,1)=cons;
   randn("state",randstate);
   [r,c]=size(objectivefn_data);
   noise=zeros(r,c);
@@ -62,13 +66,15 @@ function [Lest_mc,obj_mc,info_mc,iter_mc,nf_mc,lambda_mc] = goniometer_error (fi
     noise(:,3)=sigma(3)*randn(r,1);
     objectivefn_data=tdata + noise;
     make_objectivefn_lines();
-    [Lest,obj,info,iter,nf,lambda]=line_estimator(L0,[],[],niter,epsilon);
+    [Lest,obj,info,iter,nf,lambda]=line_estimator(L0,[],[],niter,epsilon)
+    cons=constraintfn(Lest)
     Lest_mc(:,i)=Lest;
     obj_mc(:,i)=obj;
     info_mc(:,i)=info;
     iter_mc(:,i)=iter;
     nf_mc(:,i)=nf;
     lambda_mc(:,i)=lambda;
+    cons_mc(:,i)=cons;
   endfor
   #[Lest_mc,obj_mc,info_mc,iter_mc,nf_mc,lambda_mc];
 endfunction
@@ -84,12 +90,12 @@ function [passes,tests] = __test_goniometer_error ()
   passed=0;tests=0;fails=[];
   massert=@(x,y,z=0) [passed=passed+(abs(x-y)<=z),tests=tests+1,fails=[fails,ifelse(abs(x-y)>z,tests)]];
   filename="goniometer.dat";
-  sigma=1e-1*ones(3,1);
+  sigma=5e2*ones(3,1);
   epsilon=1e-8;
   niter=35;
   N=1;
-  [Lest_mc,obj_mc,info_mc,iter_mc,nf_mc,lambda_mc] = goniometer_error (filename,sigma,randstate,epsilon,N=2,niter=45)
-#  pt=massert(norm(objectivefn_data-objectivefn_data_e),0,1e-8);
+  [Lest_mc,obj_mc,info_mc,iter_mc,nf_mc,lambda_mc,cons_mc] = goniometer_error (filename,sigma,randstate,epsilon,N=2,niter=45)
+  pt=massert(0,0,1e-8);
   ##
   passes=pt(1);
   tests=pt(2);
