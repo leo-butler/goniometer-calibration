@@ -21,8 +21,8 @@
 ##
 
 global objectivefn_partition objectivefn_data;
-function t = objectivefn (L)
-  ## usage:  t = objectivefn (L)
+function t = objectivefn (L,normalise_direction=1)
+  ## usage:  t = objectivefn (L,normalise_direction=1)
   ##
   ## Given the lines stored in the global variable objectivefn_lines
   ## this function computes \sum_M d(L,M)^2 
@@ -31,6 +31,9 @@ function t = objectivefn (L)
   t=0;
   if size(L)!=[2,3]
     L=reshape(L,3,2)';
+  endif
+  if normalise_direction
+    L(2,:)=L(2,:)/norm(L(2,:));
   endif
   for i=1:2:r
     M=objectivefn_lines(i:i+1,:);
@@ -234,6 +237,8 @@ function L = intersection_line (P,Q)
     L=[pt;v];
   end_try_catch
 endfunction
+
+global line_obj_use_acos;
 function d = line_obj (L,M,normalise_directions=1,W=1)
   ## usage:  d = line_obj (L,M,normalise_directions=1,W=1)
   ##
@@ -241,15 +246,24 @@ function d = line_obj (L,M,normalise_directions=1,W=1)
   ## and v is a unit direction vector = 2 x 3 matrix
   ## W=3x3 weight matrix
   ## normalise_directions=1 ==> make sure |v|=1.
+  global line_obj_use_acos;
   if normalise_directions==1
     L(2,:)/=norm(L(2,:));
     M(2,:)/=norm(M(2,:));
   endif
-  yp=L-M;
-  d=trace(yp * W * yp');
-  L(2,:)=-L(2,:);
-  ym=L-M;
-  d=min([d,trace(ym * W * ym')]);
+  if line_obj_use_acos
+    yp=L-M;
+    d=yp(1,:) * yp(1,:)';
+    s=sin(acos(L(2,:) * M(2,:)'));
+    d=d+s;
+  else
+    yp=L-M;
+    d=trace(yp * W * yp');
+    L(2,:)=-L(2,:);
+    ym=L-M;
+    d=min([d,trace(ym * W * ym')]);
+  endif
+   
 endfunction
 ## 
 %!test 'exact-zero'
@@ -542,9 +556,12 @@ function [passes,tests] = __test_objectivefn ()
   [passes,tests];
 endfunction
 %!xtest
+%! global scalar_constraint;
+%! scalar_constraint=1;
 %! [passes,tests]=__test_objectivefn();
 %! assert(passes,tests)
 
+global scalar_constraint;
 function C = constraintfn (L)
   ## usage:  C = constraintfn (L)
   ##
@@ -556,11 +573,24 @@ function C = constraintfn (L)
   endif
   ##Surprisingly, the estimator works better with the
   ##scalar constraint. Maybe this is worth investigating?
-  ##C = [ (norm(L(2,:))^2-1)^2 ; L(1,:) * L(2,:)' ];
-  C = [ (norm(L(2,:))^2-1)^2 + (L(1,:) * L(2,:)')^2 ];
+  global scalar_constraint;
+  if scalar_constraint
+    C = [ (norm(L(2,:))^2-1)^2 + (L(1,:) * L(2,:)')^2 ];
+  else
+    C = [ (norm(L(2,:))^2-1)^2 ; L(1,:) * L(2,:)' ];
+  endif
 endfunction
 %!test
 %! L=[1,2,3; 4,5,6];
+%! global scalar_constraint;
+%! scalar_constraint=0;
+%! c=ifelse(scalar_constraint,[(4^2+5^2+6^2-1)^2 + (1*4+2*5+3*6)^2],[(4^2+5^2+6^2-1)^2 ;  1*4+2*5+3*6]);
+%! epsilon=1e-10;
+%! assert(constraintfn(L), c, epsilon);
+%! L=[1;2;3; 4;5;6];
+%! assert(constraintfn(L), c, epsilon);
+%! L=[1,2,3, 4,5,6];
+%! assert(constraintfn(L), c, epsilon);
 %! scalar_constraint=1;
 %! c=ifelse(scalar_constraint,[(4^2+5^2+6^2-1)^2 + (1*4+2*5+3*6)^2],[(4^2+5^2+6^2-1)^2 ;  1*4+2*5+3*6]);
 %! epsilon=1e-10;
