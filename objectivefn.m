@@ -460,7 +460,6 @@ function t = __objectivefn_lines(x)
   ##
   ## This function puts the line L in P \cap Q into
   ## the global variable objectivefn_lines.
-  ## [2,1;3,3;4,12;5,60;6,360]
   global objectivefn_lines;
   t=0;
   if size(x)==[1,18]
