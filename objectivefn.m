@@ -460,28 +460,35 @@ function t = __objectivefn_lines(x)
   ##
   ## This function puts the line L in P \cap Q into
   ## the global variable objectivefn_lines.
+  ## [2,1;3,3;4,12;5,60;6,360]
   global objectivefn_lines;
+  t=0;
   if size(x)==[1,18]
     P=plane(x(1:9));
     Q=plane(x(10:18));
-    objectivefn_lines=[objectivefn_lines;intersection_line(P,Q)]
+    objectivefn_lines=[objectivefn_lines;intersection_line(P,Q)];
+    t=1;
   else
-    for i=1:9:length(x)
-      b=i;
-      f=i+8;
-      y=x(b:f);
-      if b==1
-	z=x(f+1:length(x));
-      elseif f==length(x)
-	z=x(1:b-1);
-      else
-	z=[x(1:b-1),x(f+1:length(x))];
-      endif
-      __objectivefn_lines(z);
+    ## we have r>2 planes, so we must construct all 2 subsets of
+    ## of these r planes, and compute their intersection
+    r=columns(x)/9;
+    x=reshape(x,9,r)';
+    P=powersets(1:r,[r;2]);
+    for p=P.partition{1}'
+      t=t+__objectivefn_lines([x(p(1),:),x(p(2),:)]);
     endfor
   endif
-  t=1;
 endfunction
+%!test
+%! global objectivefn_lines;
+%! objectivefn_lines=[];
+%! N=4;
+%! P=(1:(N*9)).^3
+%! assert(__objectivefn_lines(P),binomial(N,2));
+%! objectivefn_lines=[];
+%! N=5;
+%! P=(1:(N*9)).^3
+%! assert(__objectivefn_lines(P),binomial(N,2));
 
 function t = make_objectivefn_lines()
   ## usage:  t = objectivefn_lines ()
