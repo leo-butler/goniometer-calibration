@@ -238,6 +238,12 @@ function L = intersection_line (P,Q)
   end_try_catch
 endfunction
 
+
+function s = arclengthsq (x)
+  ## usage:  s = arclength (x)
+  s=acos(abs(x))^2;
+endfunction
+
 global line_obj_use_acos;
 function d = line_obj (L,M,normalise_directions=1,W=1)
   ## usage:  d = line_obj (L,M,normalise_directions=1,W=1)
@@ -254,7 +260,7 @@ function d = line_obj (L,M,normalise_directions=1,W=1)
   if line_obj_use_acos==1 && normalise_directions==1
     yp=L-M;
     d=yp(1,:) * yp(1,:)';
-    s=acos(L(2,:) * M(2,:)');
+    s=arclengthsq(L(2,:) * M(2,:)');
     d=d+s;
   else
     yp=L-M;
