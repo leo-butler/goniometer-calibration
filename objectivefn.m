@@ -251,7 +251,7 @@ function d = line_obj (L,M,normalise_directions=1,W=1)
     L(2,:)/=norm(L(2,:));
     M(2,:)/=norm(M(2,:));
   endif
-  if line_obj_use_acos
+  if line_obj_use_acos==1 && normalise_directions==1
     yp=L-M;
     d=yp(1,:) * yp(1,:)';
     s=acos(L(2,:) * M(2,:)');
@@ -451,6 +451,22 @@ function y = at (x,s)
   endfor
 endfunction
 
+global __powersets;
+function P = __objectivefn_lines_powersets (r)
+  ## usage:  P = __objectivefn_lines_powersets (r)
+  ##
+  ## A lookup function that saves the powersets
+  global __powersets;
+  P=[];
+  if iscell(__powersets) && length(__powersets)>=r
+    P=__powersets{r};
+  endif
+  if isempty(P)
+    P=powersets(1:r,[r;2]);
+    __powersets{r}=P;
+  endif
+endfunction
+
 global objectivefn_lines;
 function t = __objectivefn_lines(x)
   ## usage:  t = __objectivefn_lines (x)
@@ -472,7 +488,7 @@ function t = __objectivefn_lines(x)
     ## of these r planes, and compute their intersection
     r=columns(x)/9;
     x=reshape(x,9,r)';
-    P=powersets(1:r,[r;2]);
+    P=__objectivefn_lines_powersets(r);
     for p=P.partition{1}'
       t=t+__objectivefn_lines([x(p(1),:),x(p(2),:)]);
     endfor
@@ -496,7 +512,22 @@ function t = make_objectivefn_lines()
   ## the global variable objectivefn_lines.
   global objectivefn_partition objectivefn_data objectivefn_lines;
   objectivefn_lines=[];
-  t=iterate_over_lists_of_points(@__objectivefn_lines,objectivefn_data,objectivefn_partition);
+  r=columns(objectivefn_partition);
+  if r==2
+    t=iterate_over_lists_of_points(@__objectivefn_lines,objectivefn_data,objectivefn_partition);
+  else
+    ## construct begin/finish locations of partition
+    f=cumsum(objectivefn_partition(1,:));
+    b=[1,f+1];
+    ## construct all 2-subsets of 1:r and iterate over them
+    p2sets=__objectivefn_lines_powersets(r);
+    t=0;
+    for s=p2sets.partition{1}'
+      d=[objectivefn_data(b(s(1)):f(s(1)),:);objectivefn_data(b(s(2)):f(s(2)),:)];
+      p=[objectivefn_partition(:,s(1))';objectivefn_partition(:,s(2))']';
+      t=t+iterate_over_lists_of_points(@__objectivefn_lines,d,p);
+    endfor
+  endif
 endfunction
 
 
@@ -538,6 +569,36 @@ function [passes,tests] = __test_objectivefn ()
   pt=massert(make_objectivefn_lines(),binomial(5,3)*binomial(3,3));
   L=[0,0,0;1,0,0];
   pt=massert(objectivefn(L), 0, 10*a);
+  ## T3-1
+  a=0;
+  objectivefn_data=[6.1,7.1,a;4,5.1,0;1,0,0;
+		    0,1,1;0,5,11;0,9,7;
+		    1,0,1;3,0,2;4.3,0,-1];
+  objectivefn_partition=[3,3,3;3,3,3];
+  pt=massert(make_objectivefn_lines(),3*binomial(3,3)*binomial(3,3));
+  L=[0,0,0;0,1,0;
+     0,0,0;1,0,0;
+     0,0,0;0,0,1];
+  pt=massert(objectivefn(L(1:2,:)), 4, 10*a);
+  pt=massert(objectivefn(L(3:4,:)), 4, 10*a);
+  pt=massert(objectivefn(L(5:6,:)), 4, 10*a);
+  ## T3-2
+  a=0;
+  objectivefn_data=[6.1,7.1,a;4,5.1,0;1,0,0;21.1,2,0;
+		    0,1,1;0,5,11;0,9,7;0,13,17;
+		    1,0,1;3,0,2;4.3,0,-1;43,0,51];
+  objectivefn_partition=[4,4,4;3,3,3];
+  Nlines=3*binomial(4,3)^2;
+  pt=massert(make_objectivefn_lines(),Nlines);
+  L=[0,0,0;0,1,0;
+     0,0,0;1,0,0;
+     0,0,0;0,0,1];
+  ## each line occurs in 1/3 of objectivefn_lines
+  ## while the other 2/3 have distance=2
+  pt=massert(objectivefn(L(1:2,:)), 2*Nlines*2/3, 10*a);
+  pt=massert(objectivefn(L(3:4,:)), 2*Nlines*2/3, 10*a);
+  pt=massert(objectivefn(L(5:6,:)), 2*Nlines*2/3, 10*a);
+
   ## T4 test line_estimator
   epsilon=1e-8;
   objectivefn_partition=[3,3;3,3];
