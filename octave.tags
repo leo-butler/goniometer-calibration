@@ -1,4 +1,4 @@
- -- -*- Mode: octave; Package: OCTAVE -*-
+ -- -*- Mode: text; Package: OCTAVE -*-
  --
  -- $Id$
  --
@@ -26,9 +26,9 @@
 /^function[ \t]*\(?:.+=[ \t]*\|\)?\([[:alnum:]_]+\)[ \t]*(.*)/\1/i
  -- prototype: global
  -- global a_0 W \\n t0;
-/^[ \t]*global\(.*\\.*[\012\015]*.*\)/\1/
+/^global[ \t]+\(.*\)[ \t]*;/\1/
  --/^[ \t]*global\(\(?:\(?:[ \t]+\|\(?:[ \t]*\\\(?:\n\|\r\|\f\|\r\f\|\f\r\)[ \t]*\)\)[[:alnum:]_]+\)+\)[ \t]*;*/\1/i
-/^#+key[ \t]+\(.*\)/\1/
+/^#+key\(?:word\)*[ \t]+\(.*\)/\1/
 
 
  -- end of octave.tags 
