@@ -99,17 +99,18 @@ endfunction
 %!
 %! assert (all (abs (x-x_opt) < 5*sqrt (eps)) && abs (obj-obj_opt) < sqrt (eps));
 
+global deflation_factor=1e-3;
 function goniometer_rebase_zdata ()
   ## usage:  goniometer_rebase_zdata ()
   ##
   ## 
-  global objectivefn_data;
+  global objectivefn_data deflation_factor;
   r=rows(objectivefn_data);
   c=columns(objectivefn_data);
   for i=1:r
     for j=1:c
       x=objectivefn_data(i,j);
-      x=ifelse(x>1e6,mod(x,10000),x) * 1e-3;
+      x=ifelse(x>1e6,mod(x,10000),x) * deflation_factor;
       objectivefn_data(i,j)=x;
     endfor
   endfor
