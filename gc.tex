@@ -1,0 +1,117 @@
+%% -*- Mode: LaTeX -*-
+%%
+%% $Id:$
+%%
+%% Author: Leo Butler (l.butler@ed.ac.uk)
+%%
+%% This file is LaTeX code (http://www.tug.org/)
+%%
+%% It is free software; you can redistribute it and/or modify
+%% it under the terms of the GNU General Public License as published by
+%% the Free Software Foundation; either version 3 of the License, or (at your
+%% option) any later version.
+%%
+%% This software is distributed in the hope that it will be useful, but
+%% WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+%% or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public
+%% License for more details.
+%%
+%% You should have received a copy of the GNU General Public License
+%% along with this file. If not, see http://www.gnu.org/licenses/.
+%%
+\documentclass[a4paper,reqno]{amsart}
+\input{definitions.tex}
+\title[Goniometer]{Calibration of a Goniometer with Constrained Least
+  Squares}
+\author{Leo T. Butler \& Roman Grothausmann}
+\email{l.butler@ed.ac.uk}
+
+\begin{document}
+\begin{abstract}
+  This note shows how a goniometer may be calibrated using the method
+  of constrained least squares. We obtain error-bounds also.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+
+This note applies the geometric technique of constrained least
+squares, or more generally, constrained optimization to the problem of
+calibrating a physical instrument.
+
+\subsection{The Goniometer and its Calibration}
+\label{sec:goniometer-intro}
+
+\subsection{The Geometric Model}
+\label{sec:geometric-model}
+
+From the description of the calibration problem, we have a number of
+planes $P_i$ which intersect pairwise in the same line $\ell$. Our
+measurements are of points $y_{ij}=x_{ij}+\epsilon_{ij}$, where
+$x_{ij}$ lies on the plane $P_i$ and $\epsilon_{ij}$ is an error in
+the measurement. We want to develop an estimator $\estimate{\ell}$ of
+$\ell$ from the measurements $y_{ij}$.
+
+To explain how to do this, a few observations are in order. First,
+each {\em oriented} line $\ell$ in $\R^3$ is uniquely determined by
+the point $p \in \ell$ that is closest to $0$ and its unit direction
+vector $v$; an {\em unoriented} line is uniquely determined by $p$ and
+$\set{\pm v}$. That is,
+\begin{align*}
+  L_+ &= \set{ (p,v) \in \R^3 \times \R^3 \st \ip{p}{v}=0,\norm{v}=1 }
+    && =\textrm{set of oriented lines in }\R^3,\\
+    L &= L_+/\sim, && =\textrm{set of unoriented lines in }\R^3,
+\end{align*}
+where $(p,v) \sim (p,-v)$. The set $L_+$ of oriented lines is the
+tangent bundle of the unit sphere in $\R^3$; the set $L$ of unoriented
+lines does not have such a nice description.%%%%%%%%%%%%%%%%%%%%%%%%%
+\footnote{It is not the tangent bundle of real projective plane;
+  rather, it is the pull-back bundle of the tangent bundle of $S^2$
+  under the projection map from $S^2$ to the real projective plane.}
+\ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+One can measure distance between `points' (i.e. oriented lines) $\ell_+=(p,v)$
+and $\ell'_+=(p',v')$ in $L_+$ by the euclidean distance on $\R^3
+\times \R^2$:
+\begin{equation}
+  \label{eq:distance-between-lines}
+  \dist{\ell_+}{\ell'_+}^2 = \norm{p-p'}^2 + \norm{v-v'}^2
+\end{equation}
+and the corresponding distance between two unoriented lines is defined
+by
+\begin{equation}
+  \label{eq:distance-between-unoriented-lines}
+  \dist{\ell}{\ell'}^2 = \norm{p-p'}^2 + \min\set{ \norm{v-v'}^2,\norm{v+v'}^2}
+\end{equation}
+
+Let $Q_i=\set{y_{ij}=x_{ij}+\epsilon_{ij} \st j=1,\ldots,n_i}$ be a
+set of non-collinear points, where $x_{ij} \in P_i$ and
+$\epsilon_{ij}$ is a measurement error. Each set of $3$ points in
+$Q_i$ defines a plane that is approximately $P_i$. Let
+$\powerset{Q_i}{3}$ be set of planes defined by each $3$-subset of
+  $Q_i$. If one supposes that there is a unique line $\ell$ such that
+  \begin{align}
+    \label{eq:plane-intersection}
+    P_i \cap P_j &= \ell && \forall i\neq j,
+  \end{align}
+then the function
+\begin{align}
+  \label{eq:objective-function}
+  \omega(\ell) := \sum_{i < j}
+  \sum_{P\in\powerset{Q_i}{3},P'\in\powerset{Q_j}{3}} \dist{P \cap P'}{\ell}^2
+\end{align}
+is a natural choice of objective function. Our estimator of the line
+$\ell$ is defined by
+\begin{align}
+  \label{eq:line-estimator}
+  \estimate{\ell} := \argmin{\ell}{\omega}.
+\end{align}
+\end{document}
+
+
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 
+
+% end of gc.tex 
