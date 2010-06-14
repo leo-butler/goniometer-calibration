@@ -1,5 +1,5 @@
-#script to plot points and their errorboxes in blender
-
+##script to plot points and their errorboxes in blender
+#added colour option
 
 import math
 import sys,os,getopt
@@ -26,6 +26,9 @@ parser = optparse.OptionParser(usage = usage_text)
 
 parser.add_option('-i', '--input', dest='input', help='Input file containing the points and their errors.', type='string')
 parser.add_option('-o', '--output', dest='output', help='Output file where the scene will be saved in. Suffix sets the format: Blender (.blend); DXF (.dxf); STL (.stl); Videoscape (.obj); VRML 1.0 (.wrl)', type='string')
+parser.add_option('-r', '--red', dest='r', help='Red colour for the points and their errorboxes.', type='float')
+parser.add_option('-g', '--green', dest='g', help='Green colour for the points and their errorboxes.', type='float')
+parser.add_option('-b', '--blue', dest='b', help='Blue colour for the points and their errorboxes.', type='float')
 
 options, args = parser.parse_args(argv)
 
@@ -63,15 +66,15 @@ scn= bpy.data.scenes.active
 
 ##material for the point
 matp = B.Material.New('p_mat')         
-matp.rgbCol = [0.2, 0.2, 0.2]          # change its color
-matp.setAlpha(0.5)                     # mat.alpha = 0.2 -- almost transparent
+matp.rgbCol = [options.r, options.g, options.b]          # change its color
+matp.setAlpha(1.0)                     # mat.alpha = 0.2 -- almost transparent
 matp.emit = 0.2                        # equivalent to mat.setEmit(0.8)
 #matp.mode |= B.Material.Modes.VCOL_PAINT # turn on vertex colouring
 matp.mode |= B.Material.Modes.ZTRANSP    # turn on Z-Buffer transparency
 
 ##material for the error box
 matb = B.Material.New('p_mat')         
-matb.rgbCol = [1, 0, 0]          # change its color
+matb.rgbCol = [options.r, options.g, options.b]          # change its color
 matb.setAlpha(0.5)                     # mat.alpha = 0.2 -- almost transparent
 matb.emit = 0.2                        # equivalent to mat.setEmit(0.8)
 #matb.mode |= B.Material.Modes.VCOL_PAINT # turn on vertex colouring
