@@ -1,5 +1,7 @@
 ##script to plot points and their errorboxes in blender
 #added colour option
+#drawing a plane from #plane line
+
 
 import math
 import sys,os,getopt
@@ -80,6 +82,14 @@ matb.emit = 0.2                        # equivalent to mat.setEmit(0.8)
 #matb.mode |= B.Material.Modes.VCOL_PAINT # turn on vertex colouring
 matb.mode |= B.Material.Modes.ZTRANSP    # turn on Z-Buffer transparency
 
+##material for the fitted plane
+matplane = B.Material.New('plane_mat')         
+matplane.rgbCol = [options.r, options.g, options.b]          # change its color
+matplane.setAlpha(0.3)                     # mat.alpha = 0.2 -- almost transparent
+matplane.emit = 0.8                        # equivalent to mat.setEmit(0.8)
+#matb.mode |= B.Material.Modes.VCOL_PAINT # turn on vertex colouring
+matplane.mode |= B.Material.Modes.ZTRANSP    # turn on Z-Buffer transparency
+
 
 
 w= B.World.Get('World') #assume there exists a world named "world"
@@ -100,8 +110,49 @@ while True:
    if not in_line:
       break
 
+   #print ".",
+   #sys.stdout.write(".")
+   print "\r[%3d%%]" % (j*100.0/ln),
+   sys.stdout.flush()
+
    in_line = in_line[:-1] #drop last char '\n' ;-)
    if (len(in_line) == 0): #skip empty lines
+      continue 
+   if ("#plane"in in_line): #draw the plane
+      line= in_line.split() #split at white space
+      if line:
+         dl = map(float, line[1:])
+         index= dl[0]
+         pos= dl[1:4]
+         n= dl[4:7]
+         
+         ##calculate the rotation matrix for blender
+         #calculate the rotation angles
+         alpha= n[1]/math.fabs(n[1]) * math.acos(n[2]/(math.sqrt(n[1]**2 + n[2]**2)));
+         beta = n[0]/math.fabs(n[0]) * math.acos((math.sqrt(n[1]**2 + n[2]**2))/(math.sqrt(n[0]**2 + n[1]**2 + n[2]**2)));
+
+         #calculate the rotation matrix from the rot. angles
+         rotX = B.Mathutils.Matrix([1, 0, 0, 0], [0, math.cos(alpha), -math.sin(alpha), 0], [0, math.sin(alpha), math.cos(alpha), 0], [0,0,0,1]);
+         rotY = B.Mathutils.Matrix([math.cos(beta), 0, -math.sin(beta), 0], [0, 1, 0, 0], [math.sin(beta), 0, math.cos(beta), 0], [0,0,0,1]);
+  
+
+         #plane 
+
+         edge_len=100.0
+         mplane= B.Mesh.Primitives.Plane(edge_len) #create a cube with edge length 1
+         mplane.materials= [matplane]
+
+         tmat= (rotX*rotY)
+         #me= ob.getData(mesh=1) #blender shows the obj. according to its matrix
+         #me.transform(tmat)#but does not apply it on the obj verts
+         mplane.transform(tmat)
+         obn= "plane_%0.4d" % index
+         ob= sc.objects.new(mplane, obn) # add a new mesh-type object to the scene
+         ob.setMatrix(ob.matrix.identity())#set identity to avoid double effect
+         ob.setLocation(pos[0], pos[1], pos[2])#transl obj only not the mesh
+         ob.drawMode |= B.Object.DrawModes.TRANSP
+        
+
       continue 
    if (in_line[0] == "#"): #skip comments
       continue 
@@ -119,12 +170,6 @@ while True:
    dx= [h-l for h, l in zip(h_error, l_error)] #errorbox edge lengths
    tx= [(h-l)/2 + l for h, l in zip(h_error, l_error)] #errorbox centre
    
-   #print ".",
-   #sys.stdout.write(".")
-   print "\r[%3d%%]" % (j*100.0/ln),
-   sys.stdout.flush()
-
-
    #icosphere for point position
 
    subdivisions=1
