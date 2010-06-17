@@ -41,16 +41,6 @@ function t = objectivefn (L,normalise_direction=1)
   endfor
 endfunction
 
-
-function v=vector_product(a,b)
-  ## vector product
-  v=[a(2)*b(3)-a(3)*b(2);-a(1)*b(3)+a(3)*b(1);a(1)*b(2)-a(2)*b(1)];
-endfunction
-%!test
-%! assert(vector_product([1;0;0],[0;1;0]),[0;0;1])
-%! assert(vector_product([0;1;0],[0;0;1]),[1;0;0])
-%! assert(vector_product([0;0;1],[1;0;0]),[0;1;0])
-
 function y = rowdiff (a,i)
   ## usage:  y = rowdiff (a,i)
   ##
@@ -693,7 +683,6 @@ function [L,obj,info,iter,nf,lambda] = line_estimator (L0,LUP=[],LOW=[],maxiter=
   ## usage:  [L,obj,info,iter,nf,lambda] = line_estimator (L0,LUP,LOW,maxiter,epsilon)
   ##
   ## estimates L given L0 (a 6x1 column vector)
-  make_objectivefn_lines();
   [L,obj,info,iter,nf,lambda]=sqp(L0,@objectivefn,@constraintfn,[],LUP,LOW,maxiter,epsilon);
 endfunction
 
