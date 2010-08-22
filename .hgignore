@@ -1,0 +1,9 @@
+syntax: glob
+*.bkp
+TAGS*
+intersection_line.tar.gz
+octave-core
+temp*
+tmp*
+auto
+auto/*
