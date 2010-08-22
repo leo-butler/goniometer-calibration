@@ -7,3 +7,7 @@ temp*
 tmp*
 auto
 auto/*
+*.orig
+goniometer.dat
+*.tif
+*~
