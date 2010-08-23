@@ -1,0 +1,55 @@
+\documentclass[a4paper]{amsart}
+\input{definitions.tex}
+\includecomments{1}
+
+\begin{document}
+\section{Preamble}
+\label{sec:pre}
+The purpose of this file is to communicate ideas/comments on the
+paper. Feel free to delete comments/questions that you have raised if
+you feel they have been resolved. At the end, this section should be
+the only non-empty section.
+
+Notation: vXXlYYcZZ will refer to version XX, line YY and optionally
+column (or character) ZZ on line YY.
+
+Document structure: it should be structured like
+\begin{verbatim}
+\begin{qc}        <-- begin the list of questions/comments
+  \begin{qcitem}  <-- begin a question/comment
+    \LB           <-- comments by Leo
+    \RG           <-- comments by Roman
+  \end{qcitem}    <-- end a question/comment
+  .
+  .               <-- more qcitem environments
+  .
+  \begin{qcitem}[done]  <-- a finished question/comment (appears in gray)
+    .
+    .
+  \end{qcitem}          <-- end of same question/comment
+\end{qc}          <-- end list of questions/comments
+\end{verbatim}
+so there is need for only one \verb#qc# environment, and distinct
+questions/comments can be put into distinct \verb#qcitem#
+environments. There is no need to use {\it italics} to show who said
+what or to use \verb#\\# to end a line, just start your comment on a
+new line and preface your comment with \verb#\RG#.
+
+\section{Comments \& Questions}
+\label{sec:cq}
+\begin{qc}
+  \begin{qcitem}
+    \LB Please take a look at this file.
+  \end{qcitem}
+\end{qc}
+
+\bibliographystyle{amsplain}
+\bibliography{gc}
+\end{document}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-region: "Comments"
+%%% TeX-master: t
+%%% eval: (load-file "customisation.el")
+%%% End: 
