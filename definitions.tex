@@ -1,3 +1,6 @@
+%% packages
+\usepackage{showkeys,color,ifthen,comment}
+
 \newcommand{\estimate}[1]{\hat{#1}}
 \newcommand{\R}[0]{{\mathbf R}}
 \newcommand{\set}[1]{\left\{#1\right\}}
@@ -8,7 +11,64 @@
 \newcommand{\powerset}[2]{#1^{(#2)}}
 \newcommand{\argmin}[2]{{\displaystyle\mathrm{argmin}_{#1}\,#2}}
 \newcommand{\textem}[1]{{\em #1}}
+
+%% a customised question/comment environment
+%% for use in comments.tex
+\definecolor{gray}{rgb}{0.6,.6,0.6}
+\definecolor{green}{rgb}{0,1,0}
+\newcommand{\LB}{\item[\textbf{LB:}]}
+\newcommand{\RG}{\item[\textbf{RG:}]}
+\newenvironment{qc}[1][6mm]{
+\def\lmiqc{\leftmargini}
+\setlength{\leftmargini}{#1}
+\begin{enumerate}}{
+\end{enumerate}
+\setlength{\leftmargini}{\lmiqc}}
+\newenvironment{qcitem}[1][0]{\item\begin{enumerate}
+    \ifthenelse{\equal{#1}{done}}{\color{gray}}{\ifthenelse{\equal{#1}{new}}{\color{red}}{}}
+    }{\end{enumerate}}
+
+%% a customised comment environment for the paper
+
+%% in text:
+\newcommand{\inclcomments}[0]{1}
+\newcommand{\includecomments}[1]{%
+  \ifthenelse{\equal{#1}{}}{%
+    \inclcomments{}%
+  }{%
+    \renewcommand{\inclcomments}[0]{#1}}%
+}
+
+\newsavebox{\acommentbox}
+\newenvironment{acomment}[1][{false}]{%
+  \def\includethiscomment{#1}
+  \begin{lrbox}{\acommentbox}%
+    \raggedright\ttfamily\footnotesize\color{red}}{%
+  \end{lrbox}%
+  \ifthenelse{\equal{{\inclcomments}}{{false}}\or\equal{{\includethiscomment}}{{done}}}{%
+    }{\usebox{\acommentbox}}
+}
+
+%% marginal:
+\setlength{\marginparwidth}{35mm}
+\newsavebox{\mcommentbox}
+\newenvironment{mcomment}[1][{false}]{%
+  \def\includethiscomment{#1}
+  \begin{lrbox}{\mcommentbox}%
+    \begin{minipage}{\marginparwidth}%
+      \raggedright\ttfamily\footnotesize\color{red}}{%
+    \end{minipage}%
+  \end{lrbox}%
+  \marginpar{%
+    \ifthenelse{\equal{{\inclcomments}}{{false}}\or\equal{{\includethiscomment}}{{done}}}{%
+      }{\usebox{\mcommentbox}}
+  }%
+}
+\newcommand{\commentm}[2][0]{\begin{mcomment}[{#1}]#2\end{mcomment}}
+
 %%% Local Variables: 
 %%% mode: latex
 %%% TeX-master: "gc"
 %%% End: 
+
+%% end of definitions.tex
