@@ -43,13 +43,28 @@
 (emacs-latex-make "dvi")
 (emacs-latex-make "pdf")
 (emacs-latex-make "clean")
-(local-set-key "\C-cb" 'emacs-latex-make-bbl)
-(local-set-key "\C-cd" 'emacs-latex-make-dvi)
-(local-set-key "\C-cp" 'emacs-latex-make-pdf)
-(local-set-key "\C-cc" 'emacs-latex-make-clean)
-(local-set-key "\C-cs" 'emacs-goniometer-calibration-shell)
-(local-set-key "\C-cn" 'emacs-goniometer-calibration-narrow)
-(local-set-key "\C-cw" 'emacs-goniometer-calibration-widen)
+(defcustom goniometer-calibration-minor-mode nil
+  ""
+  :type 'boolean
+  :group 'emacs-latex)
+(define-minor-mode goniometer-calibration-minor-mode
+  "Minor mode primarily to make key-bindings buffer local."
+  ;; start mode
+  :init-value t
+  ;; mode line indicator
+  :lighter " GC"
+  ;; global ?
+  :global nil
+  ;; keybindings
+  :keymap
+  '(("\C-cb" . emacs-latex-make-bbl)
+    ("\C-cd" . emacs-latex-make-dvi)
+    ("\C-cp" . emacs-latex-make-pdf)
+    ("\C-cc" . emacs-latex-make-clean)
+    ("\C-cs" . emacs-goniometer-calibration-shell)
+    ("\C-cn" . emacs-goniometer-calibration-narrow)
+    ("\C-cw" . emacs-goniometer-calibration-widen)))
+  
 
 (define-abbrev-table 'latex-mode-abbrev-table '(
     ("aa" "\\alpha" nil 0)
