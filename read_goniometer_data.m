@@ -20,28 +20,67 @@
 ## along with this file. If not, see http://www.gnu.org/licenses/.
 ##
 
-function t = read_goniometer_data (filename)
-  ## usage:  t = read_goniometer_data (filename)
-  ##
+function [t,p] = read_goniometer_data (filenames,style="standard")
+  ## usage:  [t,p] = read_goniometer_data (filenames,style="standard")
+  ## style => "standard" == rows of 3
+  ##          "csv"      == comma separated rows
+  ## t = data
+  ## p = length of data in each file
   ## 
   t=[];
-  unwind_protect
-    fid=fopen(filename);
-    if fid>0
-      while (line=fgetl(fid))
-	switch line(1)
-	  case '#'
-	    1;
+  p=[];
+  if ischar(filenames)
+    [t,p]=read_goniometer_data(cellstr(filenames),style);
+  else
+    for i=1:length(filenames)
+      filename=filenames{i};
+      unwind_protect
+	switch style
+	  case "standard"
+	    fid=fopen(filename);
+	    if fid>0
+	      r=0;
+	      while ((line=fgetl(fid)))
+		switch line(1)
+		  case '#'
+		    1;
+		  otherwise
+		    [v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,c]=sscanf(line,"%d\t%d\t%d\t%d\t%d\t%d%d\t%d\t%d\t%d","C");
+		    t=[t;v2,v3,v4,v5,v6,v7,v8,v9,v10];
+		    r++;
+		endswitch
+	      endwhile
+	      # the partition is implicit in the above
+	      # hard-coded pattern
+	      p=[r*ones(1,3);3*ones(1,3)];
+	    else
+	      error("reading file.");
+	    endif
+	  case "csv"
+	    t0=csvread(filename);
+	    r=find(t0(:,1));
+	    c=4;
+	    t0=t0(r,2:c);
+	    p=[p,rows(r)];
+	    t=[t;t0];
 	  otherwise
-	    [v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,c]=sscanf(line,"%d\t%d\t%d\t%d\t%d\t%d%d\t%d\t%d\t%d","C");
-	    t=[t;v2,v3,v4,v5,v6,v7,v8,v9,v10];
+	    error("style option not understood.");
 	endswitch
-      endwhile
-    else
-      "Error reading file."
-    endif
-  unwind_protect_cleanup
-    fclose(fid);
-  end_unwind_protect
+      unwind_protect_cleanup
+	if strcmp(style,"standard")
+	  fclose(fid);
+	endif
+      end_unwind_protect
+    endfor
+  endif
 endfunction
+%!test
+%! f="gtest.csv"; type="csv";
+%! [t,p]=read_goniometer_data(f,type);
+%! assert(size(t),[10,3]);
+%! assert(p,[10]);
+%! [t,p]=read_goniometer_data([f;f;f;f;f],type);
+%! assert(size(t),[5*10,3]);
+%! assert(p,10*ones(1,5));
+
 ## end of read_goniometer_data.m
