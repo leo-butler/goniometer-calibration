@@ -57,11 +57,13 @@ function plane = read_goniometer_data_as_lines (filename)
   ##         with points on lines
   p=read_goniometer_data(filename,"csv");
   plane=plane2lines(p);
+  plane.filename=filename;
 endfunction
 %!test
 %! filename="~/svn-ecdf/goniometer-calibration/dir+/deg-45-zyx.csv";
 %! filename="gtest.csv";
 %! plane=read_goniometer_data_as_lines(filename);
+%! plane_exp.filename=filename;
 %! plane_exp.z=[85019];
 %! (plane_exp.lines){1}=[
 %! 362.800,1.900,85019;
@@ -137,6 +139,30 @@ endfunction
 %! L=[1,1,-1,1/sqrt(2),0,1/sqrt(2)];
 %! d=dpoint2line(x,L,0);
 %! d_exp=3/sqrt(2);
+%! assert(d,d_exp,1e-10);
+function d = dpoint2plane (x,P,normalise=1)
+  ## usage:  d = dpoint2plane (x,P,normalise=1)
+  ##
+  n=P(1:3);
+  c=P(4);
+  if normalise
+    n/=norm(n,2);
+  endif
+  d=abs(x*n'-c);
+endfunction
+%!test
+%! x=[1,1,-1];
+%! P=[1,1,-1,3]/sqrt(3);
+%! d=dpoint2plane(x,P);
+%! d_exp=0;
+%! assert(d,d_exp,1e-10);
+%! x=[-1,1,0];
+%! d=dpoint2plane(x,P);
+%! d_exp=sqrt(3);
+%! assert(d,d_exp,1e-10);
+%! P=[1,1,-1,4];
+%! d=dpoint2plane(x,P,0);
+%! d_exp=4;
 %! assert(d,d_exp,1e-10);
 
 global line_objectivefn_data;
