@@ -25,7 +25,7 @@ source filenames.m
 
 global plane_data_directory;
 plane_data_directory="~/svn-ecdf/goniometer-calibration/dir+/";
-global planes_objectivefn_data planes_objectivefn_partition planes_objectivefn_weights planes_objectivefn_scores;
+global planes_objectivefn_data planes_objectivefn_partition planes_objectivefn_weights planes_objectivefn_scores planes_objectivefn_lengths;
 planes_objectivefn_weights=[1e-10;1;1e-10];
 planes_objectivefn_scores=[];
 
@@ -44,7 +44,7 @@ function t = fom (X)
   ##
   ## * the first element in planes_objectivefn_data is the plane at 0.
   ##
-  global planes_objectivefn_data planes_objectivefn_partition;
+  global planes_objectivefn_data planes_objectivefn_partition planes_objectivefn_lengths;
   global planes_objectivefn_weights planes_objectivefn_scores;
   [L,PP,LL,S,pwl,pwol] = extract_components (X);
   W=planes_objectivefn_weights;
@@ -59,7 +59,7 @@ function t = fom (X)
     w=planes_objectivefn_data{i}.tdirvec;
     n=planes_objectivefn_data{i}.normal;
     p=a*n;
-    for j=1:length(planes_objectivefn_data{i}.lines)
+    for j=1:planes_objectivefn_partition(i)
       ++c;
       s=0;
       b=planes_objectivefn_data{i}.scalars(j+1);
@@ -67,7 +67,7 @@ function t = fom (X)
       for x=(planes_objectivefn_data{i}.lines{j})'
 	s+=dpoint2line(x',M)^2;
       endfor
-      N=length((planes_objectivefn_data{i}.lines{j}));
+      N=planes_objectivefn_lengths{i}(j); #length((planes_objectivefn_data{i}.lines{j}));
       s/=N;
       s*=W(1);
       t+=s;
@@ -95,7 +95,7 @@ function t = fom (X)
     for x=(planes_objectivefn_data{i}.lines{1})'
       s+=dpoint2plane(x',P)^2;
     endfor
-    N=length(planes_objectivefn_data{i}.lines{1});
+    N=planes_objectivefn_lengths{i}(1); #length(planes_objectivefn_data{i}.lines{1});
     s/=N;
     s*=W(3);
     t+=s;
@@ -254,12 +254,13 @@ function planes = get_planes (
   ## usage:  planes = get_planes (directory="",file_glob="*.csv",save_in_globals=1)
   ##
   ## 
-  global planes_objectivefn_data planes_objectivefn_partition;
+  global planes_objectivefn_data planes_objectivefn_partition planes_objectivefn_lengths;
   fn=filenames(directory,file_glob);
   planes=cellfun(@read_goniometer_data_as_lines,fn,"UniformOutput",false);
   if save_in_globals
     planes_objectivefn_data=planes;
     planes_objectivefn_partition=cellfun(@(x) length(x.lines),planes);
+    planes_objectivefn_lengths=cellfun(@(x) cellfun(@(y) length(y),x.lines),planes,"UniformOutput",false);
   endif
 endfunction
 				%!test
