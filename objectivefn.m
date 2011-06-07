@@ -81,7 +81,7 @@ function S = powerset (s,n,opt="rows")
   if r==n
     c=columns(s);
     if opt=="rows"
-      S=reshape(s,1,r*c);
+      S=reshape(s',1,r*c);
     else
       S=s;
     endif
@@ -121,6 +121,10 @@ endfunction
 %! assert(size(powerset(x,5)),[6,5])
 %!test
 %! assert(size(powerset(x,3)),[binomial(6,3),3])
+%!test
+%! P=[0,0,1,0; 0,2,0,0; 3,0,0,0];
+%! Ps=[0,0,1,0,0,2,0,0; 0,0,1,0,3,0,0,0; 0,2,0,0,3,0,0,0];
+%! assert(powerset(P,2),Ps);
 
 
 function s = getsset (S,i,j,opt="rows")
@@ -316,6 +320,10 @@ function P = plane (x,y=1,z=1)
     z=x(3,:);
     y=x(2,:);
     x=x(1,:);
+  elseif y==1 && size(x)==[3,3]
+    z=x(3,:);
+    y=x(2,:);
+    x=x(1,:);
   endif
   n=vector_product(y-x,z-x);
   try
@@ -342,6 +350,7 @@ endfunction
 %! assert(plane(x,y,z),P)
 %! assert(plane(reshape([x;y;z],9,1)),P)
 %! assert(plane([x;y;z]),P)
+%! assert(plane([x';y';z']),P);
 
 global show_iolop_state
 show_iolop_state=0;
