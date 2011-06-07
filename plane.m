@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this file. If not, see http://www.gnu.org/licenses/.
 #
+source goniometer.m
 
 function t = obj (alpha)
   ## usage:  t = obj (alpha)
@@ -76,6 +77,100 @@ endfunction
 %! assert(plane_obj([1;0;1;1],[1;0;1;1]),0)
 %! assert(plane_obj([-1;0;-1;-1],[1;0;1;1]),0)
 
+function [P,obj,info,iter,nf,lambda,cons] = plane_goniometer (filename,niter=45,epsilon=1e-8)
+  ## usage:  plane_goniometer (filename,niter=45,epsilon=1e-8)
+  ##
+  ## Compute least squares planes from data in filename.
+  global objectivefn_data objectivefn_partition sample_data;
+  goniometer_data=read_goniometer_data(filename);
+  [objectivefn_data,objectivefn_partition]=gpartition(goniometer_data);
+  goniometer_rebase_zdata();
+  [P,obj,info,iter,nf,lambda,cons] = __planes();
+endfunction
+%!test
+%! epsilon=1e-6;
+%! filename="goniometer_test.dat";
+%! P=[0,0,1,0;1,0,0,0;0,1,0,0]';
+%! [Q,obj,info,iter,nf,lambda,cons]=plane_goniometer(filename);
+%! s=0; for i=1:3 s+=plane_obj(P(:,i),Q(:,i)); endfor;
+%! assert(s,0,epsilon);
+%! assert(norm(info-101),0);
+%! assert(norm(obj),0,epsilon);
+%! assert(norm(cons),0,epsilon);
+
+function [L,obj,info,iter,nf,lambda] = line_plane_goniometer (filename,niter=125,epsilon=1e-8)
+  ## usage:  [L,obj,info,iter,nf,lambda] = line_plane_goniometer (filename)
+  ##
+  ## reads data in file 'filename', computes CLSQ planes through
+  ## these points, then the CLSQ line fitting those planes
+  global objectivefn_data objectivefn_partition;
+  P=plane_goniometer(filename,niter,epsilon);
+  objectivefn_lines=__lines(P);
+  L0=reshape(objectivefn_lines(1:2,:)',6,1);
+  [L,obj,info,iter,nf,lambda]=line_estimator(L0,[],[],niter,epsilon);
+endfunction
+
+function [P,obj,info,iter,nf,lambda,cons] = __planes (niter=125,epsilon=1e-8)
+  ## usage:  [P,obj,info,iter,nf,lambda,cons] = __planes (niter=125,epsilon=1e-8)
+  ##
+  ## given data in objectivefn_data/partition, computes CLSQ planes
+  ## through these points
+  global objectivefn_data objectivefn_partition sample_data;
+  n=columns(objectivefn_partition);
+  P=zeros(4,n);
+  obj=zeros(n,1);
+  info=zeros(n,1);
+  iter=zeros(n,1);
+  nf=zeros(n,1);
+  lambda=zeros(n,1);
+  cons=zeros(n,1);
+  b=0;
+  f=0;
+  for i=1:n
+    b=f+1;
+    f=b-1+objectivefn_partition(1,i);
+    sample_data=objectivefn_data(b:f,:);
+    P0=plane(sample_data(1:3,:)) + randn(4,1)*1e-2;
+    P0(1:3)/=norm(P0(1:3));
+    [P(:,i),obj(i),info(i),iter(i),nf(i),lambda(i)]=plane_estimator(P0,[],[],niter,epsilon);
+    cons(i)=norm_constraint(P(:,i));
+  endfor  
+endfunction
+%!test
+%! epsilon=1e-6;
+%! global objectivefn_data objectivefn_partition objectivefn_lines;
+%! objectivefn_data=[1,0,0;0,1,0;2,3,0; 1,0,0;0,0,1;2,0,3; 0,1,0;0,0,1;0,2,5];
+%! objectivefn_partition=[3,3,3;3,3,3];
+%! P=[0,0,1,0; 0,1,0,0; 1,0,0,0]';
+%! [Q,obj,info,iter,nf,lambda,cons] = __planes();
+%! s=0; for i=1:3 s+=plane_obj(P(:,i),Q(:,i)); endfor;
+%! assert(s,0,epsilon);
+%! assert(norm(info-101),0);
+%! assert(norm(obj),0,epsilon);
+%! assert(norm(cons),0,epsilon);
+
+function L = __lines (P,niter=125,epsilon=1e-8)
+  ## usage:  L = __lines (P,niter=125,epsilon=1e-8)
+  ##
+  ## Computes intersections of planes defined by columns of P
+  Ps=powerset(P',2,"rows")';
+  L=zeros(2*columns(Ps),3);
+  i=1;
+  for l=Ps
+    P0=l(1:4);
+    P1=l(5:8);
+    L(i:i+1,:)=intersection_line(P0,P1);
+    i+=2;
+  endfor
+endfunction
+%!test
+%! epsilon=1e-8;
+%! P=[0,0,1,0; 0,1,0,0; 1,0,0,0]';
+%! L=[0,0,0; 1,0,0; 0,0,0; 0,1,0; 0,0,0; 0,0,-1 ];
+%! M=__lines(P);
+%! s=0; for i=1:2:6 s+=line_obj(L(i:i+1,:),M(i:i+1,:)); endfor;
+%! assert(s,0,epsilon);
+
 function errors = estimator_error_in_sample_s (randstate,a,b,steps,v1,v2,p,epsilon,use_constant=1,grid=1)
   ## usage:  errors = estimator_error_in_sample_s (randstate,a,b,steps,v1,v2,p,epsilon,use_constant=1,grid=1)
   ##
@@ -117,7 +212,7 @@ function errors = estimator_error_in_sample_s (randstate,a,b,steps,v1,v2,p,epsil
 endfunction
 
 function [P,obj,info,iter,nf,lambda] = plane_estimator (P0,PUP=[],POW=[],maxiter=125,epsilon=1e-8)
-  ## usage:  [P,obj,info,iter,nf,lambda] = plane_estimator (P0,PUP,POW,maxiter,epsilon)
+  ## usage:  [P,obj,info,iter,nf,lambda] = plane_estimator (P0,PUP,POW,maxiter=125,epsilon=1e-8)
   ##
   ## estimates P given P0 (a 4x1 column vector)
   [P,obj,info,iter,nf,lambda]=sqp(P0,@obj,@norm_constraint,[],PUP,POW,maxiter,epsilon);
