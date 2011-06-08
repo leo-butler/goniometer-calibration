@@ -25,9 +25,46 @@ source filenames.m
 
 global plane_data_directory;
 plane_data_directory="~/svn-ecdf/goniometer-calibration/dir+/";
-global planes_objectivefn_data planes_objectivefn_partition planes_objectivefn_weights planes_objectivefn_scores planes_objectivefn_lengths;
+global planes_objectivefn_data;
+global planes_objectivefn_partition;
+global planes_objectivefn_weights;
+global planes_objectivefn_scores;
+global planes_objectivefn_lengths;
+global planes_objectivefn_intersections;
 planes_objectivefn_weights=[1e-10;1;1e-10];
 planes_objectivefn_scores=[];
+
+function d = dp2l (q,p,v,new)
+  ## usage:  d = dp2l (q,p,v,new)
+  ##
+  ## compute the distance of the point q from the line [p;v]
+  persistent P;
+  if new
+    P=eye(3)-v*v';
+  endif
+  d=norm(P*q-p,2);
+endfunction
+%!test
+%! eps=1e-8;
+%! d=dp2l([0;0;0],[1;0;-1],[1;1;1]/sqrt(3),1);
+%! assert(d,sqrt(2),eps);
+
+function d = dp2p (q,alpha,new)
+  ## usage:  d = dp2p (q,alpha,new)
+  ##
+  ## compute the distance of the point q from the plane alpha=[n;c]
+  persistent n w;
+  if new
+    n=alpha(1:3)';
+    w=alpha(4)*n;
+  endif
+  d=norm((n*q)*n-w,2);
+endfunction
+%!test
+%! eps=1e-8;
+%! d=dp2p([1;0;0],[1;0;0;1],1);
+%! assert(d,0,eps);
+
 
 function t = fom (X)
   ## usage:  t = fom (X)
@@ -44,11 +81,27 @@ function t = fom (X)
   ##
   ## * the first element in planes_objectivefn_data is the plane at 0.
   ##
-  global planes_objectivefn_data planes_objectivefn_partition planes_objectivefn_lengths;
-  global planes_objectivefn_weights planes_objectivefn_scores;
-  [L,PP,LL,S,pwl,pwol] = extract_components (X);
+  global planes_objectivefn_data;
+  global planes_objectivefn_partition;
+  global planes_objectivefn_lengths;
+  global planes_objectivefn_weights;
+  global planes_objectivefn_scores;
+  global planes_objectivefn_intersections;
+  [L,PP,S,LL,pwl,pwol] = extract_components (X);
   W=planes_objectivefn_weights;
   scores=zeros(1,3);
+
+  ## transpose lines so that points are column vectors
+  try
+    planes_objectivefn_data{1}.columns;
+  catch
+    planes_objectivefn_data{1}.columns=1;
+    for i=union(pwl,pwol)
+      for j=1:planes_objectivefn_partition(i)
+	planes_objectivefn_data{i}.lines{j}=(planes_objectivefn_data{i}.lines{j})';
+      endfor
+    endfor
+  end_try_catch
 
   ## compute penalty for lines
   t=0;
@@ -64,10 +117,13 @@ function t = fom (X)
       s=0;
       b=planes_objectivefn_data{i}.scalars(j+1);
       M=[p+b*w;v];
-      for x=(planes_objectivefn_data{i}.lines{j})'
-	s+=dpoint2line(x',M)^2;
+      pw=p+b*w;
+      new=1;
+      for x=(planes_objectivefn_data{i}.lines{j})
+	s+=dp2l(x,pw,v,new)^2;
+	new=0;
       endfor
-      N=planes_objectivefn_lengths{i}(j); #length((planes_objectivefn_data{i}.lines{j}));
+      N=planes_objectivefn_lengths{i}(j);
       s/=N;
       s*=W(1);
       t+=s;
@@ -78,7 +134,7 @@ function t = fom (X)
   ## compute penalty for planes
   s=0;
   L=reshape(L,3,2)';
-  for p=(S.partition){1}'
+  for p=(planes_objectivefn_intersections.partition){1}
     A=PP(:,p(1));
     B=PP(:,p(2));
     M=intersection_line(A,B);
@@ -91,11 +147,13 @@ function t = fom (X)
   ## finally, compute the penalty for the 0 inclination plane
   s=0;
   for i=pwol'
-    P=PP(:,i)';
-    for x=(planes_objectivefn_data{i}.lines{1})'
-      s+=dpoint2plane(x',P)^2;
+    P=PP(:,i);
+    new=1;
+    for x=(planes_objectivefn_data{i}.lines{1})
+      s+=dp2p(x,P,new);
+      new=0;
     endfor
-    N=planes_objectivefn_lengths{i}(1); #length(planes_objectivefn_data{i}.lines{1});
+    N=planes_objectivefn_lengths{i}(1);
     s/=N;
     s*=W(3);
     t+=s;
@@ -111,7 +169,7 @@ endfunction
 %! l=6+4*1+6*2+9+2;
 %! X=randn(l,1);
 %! tic
-%! fom(X)
+%! fom(X);
 %! toc
 
 function [L,PP,LL,S,pwl,pwol] = extract_components (X)
@@ -129,7 +187,10 @@ function [L,PP,LL,S,pwl,pwol] = extract_components (X)
   ##
   ## * the first element in planes_objectivefn_data is the plane at 0.
   ##
-  global planes_objectivefn_data planes_objectivefn_partition;
+  global planes_objectivefn_data;
+  global planes_objectivefn_partition;
+  global planes_objectivefn_intersections;
+  persistent not_done=true S;
   n=length(planes_objectivefn_partition);
   pwl=find(planes_objectivefn_partition>1);
   pwol=setdiff(1:n,pwl);
@@ -167,7 +228,11 @@ function [L,PP,LL,S,pwl,pwol] = extract_components (X)
     PP=[PP,[N;C]];
   endfor
   LL=[];
-  S=powersets(PP',[columns(PP);2]);
+  if not_done
+    S=planes_objectivefn_intersections=powersets(1:columns(PP)',[columns(PP);2]);
+    planes_objectivefn_intersections.partition{1}=planes_objectivefn_intersections.partition{1}';
+    not_done=false;
+  endif
 endfunction
 
 %!test
@@ -202,7 +267,9 @@ endfunction
 %! planes=get_planes(planes_data_directory);
 %! l=6+4*1+6*2+9+2;
 %! X=(1:l)';
-%! fomc(X)
+%! tic
+%! fomc(X);
+%! toc
 
 function t = unit_constraint (x)
   ## usage:  t = unit_constraint (x)
