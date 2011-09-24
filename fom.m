@@ -34,38 +34,6 @@ global planes_objectivefn_intersections;
 planes_objectivefn_weights=[1e-10;1;1e-10];
 planes_objectivefn_scores=[];
 
-function d = dp2l (q,p,v,new)
-  ## usage:  d = dp2l (q,p,v,new)
-  ##
-  ## compute the distance of the point q from the line [p;v]
-  persistent P;
-  if new
-    P=eye(3)-v*v';
-  endif
-  d=norm(P*q-p,2);
-endfunction
-%!test
-%! eps=1e-8;
-%! d=dp2l([0;0;0],[1;0;-1],[1;1;1]/sqrt(3),1);
-%! assert(d,sqrt(2),eps);
-
-function d = dp2p (q,alpha,new)
-  ## usage:  d = dp2p (q,alpha,new)
-  ##
-  ## compute the distance of the point q from the plane alpha=[n;c]
-  persistent n w;
-  if new
-    n=alpha(1:3)';
-    w=alpha(4)*n;
-  endif
-  d=norm((n*q)*n-w,2);
-endfunction
-%!test
-%! eps=1e-8;
-%! d=dp2p([1;0;0],[1;0;0;1],1);
-%! assert(d,0,eps);
-
-
 function t = fom (X)
   ## usage:  t = fom (X)
   ##
@@ -191,17 +159,17 @@ function [L,PP,LL,S,pwl,pwol] = extract_components (X)
   global planes_objectivefn_partition;
   global planes_objectivefn_intersections;
   persistent not_done=true S;
-  n=length(planes_objectivefn_partition);
-  pwl=find(planes_objectivefn_partition>1);
-  pwol=setdiff(1:n,pwl);
-  nwol=length(pwol);
-  nwl=length(pwl);
-  mwl=sum(planes_objectivefn_partition(pwl));
+  persistent n=length(planes_objectivefn_partition);
+  persistent pwl=find(planes_objectivefn_partition>1);
+  persistent pwol=setdiff(1:n,pwl);
+  persistent nwol=length(pwol);
+  persistent nwl=length(pwl);
+  persistent mwl=sum(planes_objectivefn_partition(pwl));
   ## the lead input is L a 6x1 vector
   ## each plane requires a 4x1 vector
   ## each plane with s lines requires 2 3x1 vectors and s+1 scalars
-  k=6+4*nwol+6*nwl+mwl+nwl;
-  l=length(X);
+  persistent k=6+4*nwol+6*nwl+mwl+nwl;
+  persistent l=length(X);
   if l!=k
     error ("fom(X): input X should have length ",k);
   endif
