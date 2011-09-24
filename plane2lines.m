@@ -79,46 +79,6 @@ endfunction
 %! assert(plane,plane_exp);
 
 
-function [y,a,b] = projection_onto_line (x,L,normalise=1)
-  ## usage:  y = projection_onto_line (x,L,normalise=1)
-  ##
-  ## x = point = 1x3 vector
-  ## L = line  = 2x3 vector = [p;v]
-  ##     where p = point closest to 0 on L,
-  ##           v = unit direction vector
-  ## y = projection of x onto L
-  ## a = x-p, b = y-p
-  if size(L)==[6,1]
-    p=L(1:3)';
-    v=L(4:6)';
-  elseif size(L)==[1,6]
-    p=L(1:3);
-    v=L(4:6);
-  elseif size(L)==[2,3]
-    p=L(1,:);
-    v=L(2,:);
-  endif
-  #normalise v and p if needed
-  if normalise
-    v/=norm(v);
-    p=p-(v*p')*v;
-  endif
-  a=x-p;
-  b=(v*a')*v;
-  y=p+b;
-endfunction
-%!test
-%! eps=1e-8;
-%! x=[1,2,4];
-%! L=[1,1,-1;1/sqrt(2),0,1/sqrt(2)];
-%! [y,a,b]=projection_onto_line(x,L);
-%! p=L(1,:);
-%! a_exp=x-p;
-%! b_exp=L(2,:)*5/sqrt(2);
-%! y_exp=p+b_exp;
-%! assert(y_exp,y,eps);
-%! assert(a_exp,a,eps);
-%! assert(b_exp,b,eps);
 
 function d = dpoint2line (x,L,normalise=1)
   ## usage:  d = dpoint2line (x,L,normalise=1)
