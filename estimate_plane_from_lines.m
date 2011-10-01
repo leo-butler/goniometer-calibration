@@ -44,7 +44,9 @@ endfunction
 %! global focal_plane_depths;
 %! global planar_line_data;
 %! global focal_plane_normal;
+%! global focal_plane_normal_t;
 %! focal_plane_normal=[0;0;1];
+%! focal_plane_normal_t=focal_plane_normal';
 %! focal_plane_depths=[1;2;3];
 %! P0=[1;1;1;4]/sqrt(3);
 %! P=[1;0;0;1];
@@ -62,7 +64,9 @@ endfunction
 %! global focal_plane_depths;
 %! global planar_line_data;
 %! global focal_plane_normal;
+%! global focal_plane_normal_t;
 %! focal_plane_normal=[0;0;1];
+%! focal_plane_normal_t=focal_plane_normal';
 %! focal_plane_depths=[1;2;3];
 %! load "randstate.m";
 %! rand("state",randstate);
