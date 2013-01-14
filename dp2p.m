@@ -28,11 +28,15 @@ function d = dp2p (q,alpha,new)
     n=alpha(1:3)';
     w=alpha(4)*n;
   endif
-  d=norm((n*q)*n-w,2);
+  ## d is the *signed* distance of q to the plane alpha
+  ## abs(d)=norm((n*q)*n-w,2)
+  d=n*q-alpha(4);
 endfunction
 %!test
 %! eps=1e-8;
 %! d=dp2p([1;0;0],[1;0;0;1],1);
 %! assert(d,0,eps);
+%! d=dp2p([1;2;3],[1;-1;2;1]/sqrt(6),1);
+%! assert(d,(1-2+6)/sqrt(6)-1/sqrt(6),eps)
 
 #  end of dp2p.m 
