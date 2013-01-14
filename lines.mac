@@ -1,0 +1,97 @@
+s1 : make_random_state(4352345);
+set_random_state(s1);
+line(n) := block([p,v],
+  p:makelist(random(10.0),i,1,n),
+  v:makelist(random(10.0),i,1,n),
+  v:v/sqrt(v.v),
+  p:p-(p.v)*v,
+  [p,v]);
+lines(N,n) := makelist(line(n),i,1,N);
+point(l) := first(l);
+vector(l) := second(l);
+mean(lst) := apply("+",lst)/length(lst);
+norm(lst) := sqrt(lst.lst);
+c2f(x) := block([y], y:ev(float(expand(rectform(x))),numer), if y=x then return(x) else return(c2f(y)));
+
+fom(l,L) := block([p,v,p0,v0],
+  if l=false then return(l),
+  p:map(point,L),  p0:point(l),
+  v:map(vector,L), v0:vector(l),
+  0.5*sum(norm(p[i]-p0)^2 + norm(v[i]-v0)^2,i,1,length(L))/length(L));
+
+vec(l,d) := block([pbar,vbar,p,v,u,w,np],
+  pbar:point(l), vbar:vector(l),
+  if abs(d) > 1e-12 then (
+    np:norm(pbar),
+    u:pbar/np,
+    w:vbar/np^2,
+    v:d^(-1)*(w-(w.u)*u/(1+d)),
+    p:pbar-(v.pbar)*v)
+  else (
+    v:vbar/norm(vbar),
+    p:0*pbar),
+  [p,v]);
+
+includeif(l,p) := block([L:[]], map(lambda([x],if p(x) then L:append(L,[x])),l), L);
+critpoly(d,a,b) := (1+d)^2*d^2 + 2*(1+d)*b - a*(1+d)^2 - b;
+
+mean_line(L) := block([pbar,vbar,u,a2,b2,d,eq],
+  pbar:mean(map(point,L)),
+  vbar:mean(map(vector,L)),
+  u:pbar/norm(pbar), w:vbar/(pbar.pbar),
+  a2:w.w,
+  b2:(u.w)^2,
+  eq:critpoly(d,a2,b2),
+  drts:sort(map(rhs,allroots(eq))),
+  lines:map(lambda([d],if atom(d) then vec([pbar,vbar],d)),drts),
+  alpha:map(lambda([l],-vector(l).pbar),lines),
+  beta:map(lambda([l],-vector(l).vbar+1),lines),
+  lines
+  );
+
+fpprintprec:4 $
+N:10 $
+L:lines(N,3)$
+ml:mean_line(L)$
+map(lambda([l],fom(l,L)),ml);
+drts;
+ml:mean_line([[[0,1,0],[1,0,0]], [[0,0,1],[0,1,0]], [[1,0,0],[0,0,1]]]);
+map(lambda([l],fom(l,L)),ml),numer;
+drts;
+
+
+
+hess(l,alpha,beta) := block([lvar,Pvar,Vvar,a,b],
+  lvar:flatten([Pvar:makelist(concat(P,i),i,1,3),Vvar:makelist(concat(V,i),i,1,3)]),
+  f:fom([Pvar,Vvar],L)-a*Pvar.Vvar-b*(Vvar.Vvar-1)/2,
+  df:diff(f),
+  dfv:map(lambda([x],
+      subst(flatten(append(map("=",Pvar,point(l)),map("=",Vvar,vector(l)),[a=alpha,b=beta,del(a)=0,del(b)=0])),coeff(df,del(x)))),
+      lvar),
+  h:hessian(f,listofvars(f)),
+  subst(flatten(append(map("=",Pvar,point(l)),map("=",Vvar,vector(l)),[a=alpha,b=beta])),h)
+  );
+
+
+eigvals(h) := block([x], map(rhs,allroots(determinant(h-x*ident(length(h))))));
+
+load(draw);
+
+remarray(r);
+plotroots(A,B) := block([roots,i,j,M,gf1,gf2,gf3,gf4,f1,f2,f3,f4,r],
+  local(roots,f1,f2,f3,f4,nearest),
+  roots(a,b) := sort(map(lambda([x],realpart(rhs(x))),allroots(critpoly(d,a,b)))),
+  f1(a,b) := (if listp(r[a,b]) then true else r[a,b]:roots(a,b),part(r[a,b],1)),
+  f2(a,b) := (if listp(r[a,b]) then true else r[a,b]:roots(a,b),part(r[a,b],2)),
+  f3(a,b) := (if listp(r[a,b]) then true else r[a,b]:roots(a,b),part(r[a,b],3)),
+  f4(a,b) := (if listp(r[a,b]) then true else r[a,b]:roots(a,b),part(r[a,b],4)),
+  A:map('float,A), B:map('float,B),
+  gf1:explicit('f1(a,b),a,first(A),second(A),b,first(B),second(B)),
+  gf2:explicit('f2(a,b),a,first(A),second(A),b,first(B),second(B)),
+  gf3:explicit('f3(a,b),a,first(A),second(A),b,first(B),second(B)),
+  gf4:explicit('f4(a,b),a,first(A),second(A),b,first(B),second(B)),
+  draw3d(
+    terminal = 'wxt,
+    gf1, gf2, gf3, gf4
+    ));
+      
