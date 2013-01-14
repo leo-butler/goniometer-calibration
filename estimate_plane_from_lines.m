@@ -31,13 +31,13 @@
 ## focal_plane_normal_t -> transpose of previous
 
 function [P_hat,obj,info,iter,nf,lambda] = estimate_plane_from_lines (P0,maxiter=150,tolerance=1e-6)
-  # global planar_line_data;
-  # global focal_plane_normal;
-  # global focal_plane_normal_t;
-  # global focal_plane_depths;
+  global oriented_plane;
+  global fom_plane_from_lines;
   unit_length=@(x) x(1)^2+x(2)^2+x(3)^2-1;
-  fom=@(x) fom_plane_from_lines(x);
-  [P_hat,obj,info,iter,nf,lambda]=sqp(P0,fom,unit_length,[],[],[],maxiter,tolerance);
+  [P_hat,obj,info,iter,nf,lambda]=sqp(P0,fom_plane_from_lines,unit_length,[],[],[],maxiter,tolerance);
+  if (!oriented_plane) && (P_hat(4)<0)
+    P_hat *= -1;
+  endif
 endfunction
 
 %!test
@@ -45,6 +45,8 @@ endfunction
 %! global planar_line_data;
 %! global focal_plane_normal;
 %! global focal_plane_normal_t;
+%! global fom_plane_from_lines;
+%! fom_plane_from_lines="fom_plane_from_lines";
 %! focal_plane_normal=[0;0;1];
 %! focal_plane_normal_t=focal_plane_normal';
 %! focal_plane_depths=[1;2;3];
@@ -60,11 +62,38 @@ endfunction
 %! 		  };
 %! [P_hat,obj,info,iter,nf,lambda]=estimate_plane_from_lines(P0);
 %! assert(P_hat,[1;0;0;1],1e-6);
+%! assert(norm(P_hat(1:3),2),1,1e-6);
 %!test
 %! global focal_plane_depths;
 %! global planar_line_data;
 %! global focal_plane_normal;
 %! global focal_plane_normal_t;
+%! global oriented_plane;
+%! global fom_plane_from_lines;
+%! fom_plane_from_lines="fom_plane_from_lines";
+%! focal_plane_normal=[0;0;1];
+%! focal_plane_normal_t=focal_plane_normal';
+%! focal_plane_depths=[1;2;3];
+%! oriented_plane=0;
+%! P0=[1;1;1;-4]/sqrt(3);
+%! P=[-1;0;0;1];
+%! 
+%! planar_line_data={
+%! 		  ## alpha+t*rho+s*v
+%! 		  ## t=lambda=focal_plane_depth
+%! 		  -[1,1,1;0,0,0;0,0,0]+1*[0,0,0;0,0,0;1,1,1]+[0;-1;0]*[-1,2,3]
+%! 		  -[1,1,1;0,0,0;0,0,0]+2*[0,0,0;0,0,0;1,1,1]+[0;-1;0]*[-1,2,3]
+%! 		  -[1,1,1;0,0,0;0,0,0]+3*[0,0,0;0,0,0;1,1,1]+[0;-1;0]*[-1,2,3]
+%! 		  };
+%! [P_hat,obj,info,iter,nf,lambda]=estimate_plane_from_lines(P0);
+%! assert(P_hat,[-1;0;0;1],1e-6);
+%!test
+%! global focal_plane_depths;
+%! global planar_line_data;
+%! global focal_plane_normal;
+%! global focal_plane_normal_t;
+%! global fom_plane_from_lines;
+%! fom_plane_from_lines="fom_plane_from_lines";
 %! focal_plane_normal=[0;0;1];
 %! focal_plane_normal_t=focal_plane_normal';
 %! focal_plane_depths=[1;2;3];
