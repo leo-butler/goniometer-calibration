@@ -35,7 +35,7 @@ function s = fom_plane_from_lines (P)
   global focal_plane_normal_t;
   s = 0;
   ## decompose P
-  n = P(1:3);
+  n = P(1:3); n/=norm(n,2);
   c = P(4);
   ## determine the common direction vector v of the parallel lines
   v = vector_product(n,focal_plane_normal);
@@ -45,11 +45,12 @@ function s = fom_plane_from_lines (P)
   rho = focal_plane_normal - projection_onto_vector(n,focal_plane_normal);
   rho /= norm(rho,2);
 
-  for i=1:length(focal_plane_depths)
+  l=length(focal_plane_depths);
+  for i=1:l
     f=focal_plane_depths(i);
     ## determine scalar
     t = f - c*(focal_plane_normal_t*n);
-    t /= focal_plane_normal'*rho;
+    t /= focal_plane_normal_t*rho;
     ## determine point of line; p is orthogonal to v
     p = c*n + t*rho;
     N = columns(planar_line_data{i});
@@ -59,14 +60,20 @@ function s = fom_plane_from_lines (P)
       r += dp2l(x,p,v,new)^2;
       new = 0;
     endfor
-#    pp = repmat(p,1,N);
-#    PP = eye(3) - v*v';
-#    x = PP*(planar_line_data{i} - pp)
-#    r += norm(x,"fro")^2
     r /= N;
     s += r;
   endfor
+  s /= l;
 endfunction
+%!test
+%! global focal_plane_depths;
+%! global planar_line_data;
+%! global focal_plane_normal;
+%! focal_plane_depths=[1;1];
+%! planar_line_data={[1,1;0,1;0,0],[1,1;0,1;0,0]};
+%! focal_plane_normal=[0;0;1];
+%! P=[0;1;0;0];
+%! assert(fom_plane_from_lines(P),1.5,1e-8);
 %!test
 %! global focal_plane_depths;
 %! global planar_line_data;
@@ -106,7 +113,7 @@ endfunction
 %! 		  [1,1,1;0,0,0;0,0,0]+3*[0,0,0;0,0,0;1,1,1]+[0;-1;0]*[-1,2,3]+eye(3)
 %! 		  };
 %! # distance computed by hand:
-%! assert(fom_plane_from_lines(P),2,1e-8)
+%! assert(fom_plane_from_lines(P),2/3,1e-8)
 
 
 
