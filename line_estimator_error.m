@@ -39,7 +39,7 @@ function [errors,Lests] = line_estimator_error (P,sigma,randstate,epsilon,Lactua
     make_objectivefn_lines();
     Lest=line_estimator(L0,[],[],niter,epsilon);
     Lestr=reshape(Lest,3,2)';
-    errors(i)=line_obj(Lactual,Lestr);
+    errors(i)=dl2l(Lactual,Lestr);
     Lests(i,:)=Lest';
   endfor
   [errors,Lests];

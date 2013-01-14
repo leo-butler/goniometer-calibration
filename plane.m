@@ -168,7 +168,7 @@ endfunction
 %! P=[0,0,1,0; 0,1,0,0; 1,0,0,0]';
 %! L=[0,0,0; 1,0,0; 0,0,0; 0,1,0; 0,0,0; 0,0,-1 ];
 %! M=__lines(P);
-%! s=0; for i=1:2:6 s+=line_obj(L(i:i+1,:),M(i:i+1,:)); endfor;
+%! s=0; for i=1:2:6 s+=dl2l(L(i:i+1,:),M(i:i+1,:)); endfor;
 %! assert(s,0,epsilon);
 
 function errors = estimator_error_in_sample_s (randstate,a,b,steps,v1,v2,p,epsilon,use_constant=1,grid=1)

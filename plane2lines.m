@@ -253,7 +253,7 @@ endfunction
 %! c=1/sqrt(1+1+2^2);
 %! L_exp=[4;4;4;-c;-c;2*c];
 %! con=constraintfn(L);
-%! assert(line_obj(L,L_exp),0,leps);
+%! assert(dl2l(L,L_exp),0,leps);
 %! assert(con,[0;0],leps*2);
 %!test
 %! leps=1e-5;
@@ -273,7 +273,7 @@ endfunction
 %! c=1/sqrt(1+1);
 %! L_exp=[4;4;0;c;-c;0];
 %! con=line_constraintfn(L);
-%! assert(line_obj(L,L_exp),0,leps);
+%! assert(dl2l(L,L_exp),0,leps);
 %! assert(con,[0;0;0;0],leps*2);
 
 
