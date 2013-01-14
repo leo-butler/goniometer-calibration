@@ -106,7 +106,7 @@ function t = fom (X)
     A=PP(:,p(1));
     B=PP(:,p(2));
     M=intersection_line(A,B);
-    s+=line_obj(L,M);
+    s+=dl2l(L,M);
   endfor
   s*=W(2);
   t+=s;
