@@ -27,7 +27,7 @@ function d = dp2l (q,p,v,new)
   if new
     P=eye(3)-v*v';
   endif
-  d=norm(P*q-p,2);
+  d=norm(P*(q-p),2);
 endfunction
 %!test
 %! eps=1e-8;
