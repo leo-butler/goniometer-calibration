@@ -38,7 +38,11 @@ function [l,L,P,G] = estimator_closed_form (planar_line_data_str,focal_plane_nor
     if trans==1
       x=cellfun(@(t) t',x,"UniformOutput",false);
     endif
-    [p,g]=estimate_plane_from_lines_closed_form(x,z,focal_plane_normal,max_assert_error);
+    if length(z)==1
+      [p,g]=estimate_plane_from_line_closed_form(x,z,focal_plane_normal,max_assert_error);
+    else
+      [p,g]=estimate_plane_from_lines_closed_form(x,z,focal_plane_normal,max_assert_error);
+    endif
     P(:,i)=p;
     G(:,((3*i-2):(3*i)))=g;
   endfor
