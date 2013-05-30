@@ -19,7 +19,7 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this file. If not, see http://www.gnu.org/licenses/.
 ##
-function d = dp2p (q,alpha,new)
+function d = dp2p (q,alpha,new=1)
   ## usage:  d = dp2p (q,alpha,new)
   ##
   ## compute the distance of the point q from the plane alpha=[n;c]

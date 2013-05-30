@@ -19,20 +19,26 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this file. If not, see http://www.gnu.org/licenses/.
 ##
-## usage:  d = dl2l (L,M,normalise_directions=1,W=1)
+## usage:  d = dl2l (L,M,normalise_directions=1,oriented_lines=1,W=1)
 ##
 ## L,M are lines in R^3 = [p;v] where p is a point in R^3 closest to 0
 ## and v is a unit direction vector = 2 x 3 matrix
 ## W=3x3 weight matrix
 ## normalise_directions=1 ==> make sure |v|=1.
+## oriented_lines=0 ==> compute distance between unoriented lines
 
-function d = dl2l (L,M,normalise_directions=1,W=1)
+function d = dl2l (L,M,normalise_directions=1,oriented_lines=1,W=1)
   global dl2l_use_acos;
+  [r,c]=size(L);
+  if r==1
+    L=reshape(L',c/2,2)';
+    M=reshape(M',c/2,2)';
+  endif
   if normalise_directions==1
     L(2,:)/=norm(L(2,:));
     M(2,:)/=norm(M(2,:));
   endif
-  if dl2l_use_acos==1 && normalise_directions==1
+  if dl2l_use_acos==1
     yp=L-M;
     d=yp(1,:) * yp(1,:)';
     s=arclengthsq(L(2,:) * M(2,:)');
@@ -40,9 +46,10 @@ function d = dl2l (L,M,normalise_directions=1,W=1)
   else
     yp=L-M;
     d=trace(yp * W * yp');
-    L(2,:)=-L(2,:);
-    ym=L-M;
-    d=min([d,trace(ym * W * ym')]);
+  endif
+  if oriented_lines==0
+    ym=L-diag([1,-1])*M;
+    d=min([d,trace(ym*W*ym')]);
   endif
 endfunction
 %!test
@@ -60,10 +67,15 @@ endfunction
 %! dl2l_use_acos=1;
 %! L=[1,1,1;1,1,1]/sqrt(3);
 %! M=[1,1,1;1,1,1]/sqrt(3);
-%! assert(dl2l(L,M),0);
+%! assert(dl2l(L,M),0,1e-8);
 %! c=1/sqrt(3);
 %! d=1/sqrt(2);
 %! M=[c,c,c;0,d,d];
 %! assert(dl2l(L,M),arclengthsq(0+2*d*c),1e-8)
+%!test
+%! global dl2l_use_acos;
+%! dl2l_use_acos=0;
+%! assert(dl2l([1,1,1;0,0,1],[1,1,1;0,0,-1],0,1),4,1e-8);
+%! assert(dl2l([1,1,1;0,0,1],[1,1,1;0,0,-1],0,0),0,1e-8);
  
 #  end of dl2l.m 
