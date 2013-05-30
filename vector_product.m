@@ -26,10 +26,22 @@ function v = vector_product (a,b)
   ## v = the vector (cross) product of the 3-vectors a and b.
   ## a,b may be row or column vectors.
   v=[a(2)*b(3)-a(3)*b(2);-a(1)*b(3)+a(3)*b(1);a(1)*b(2)-a(2)*b(1)];
+  if rows(a)==1 && rows(b)==1
+    v=[a(2)*b(3)-a(3)*b(2), -a(1)*b(3)+a(3)*b(1), a(1)*b(2)-a(2)*b(1)];
+  elseif rows(a)==3 && rows(b)==3
+    v=[a(2,:).*b(3,:)-a(3,:).*b(2,:);-a(1,:).*b(3,:)+a(3,:).*b(1,:);a(1,:).*b(2,:)-a(2,:).*b(1,:)];
+  else
+    error();
+  endif
 endfunction
 %!test
 %! assert(vector_product([1;0;0],[0;1;0]),[0;0;1])
 %! assert(vector_product([0;1;0],[0;0;1]),[1;0;0])
 %! assert(vector_product([0;0;1],[1;0;0]),[0;1;0])
+%! assert(vector_product([1,0,0],[0,1,0]),[0,0,1])
+%! assert(vector_product([0,1,0],[0,0,1]),[1,0,0])
+%! assert(vector_product([0,0,1],[1,0,0]),[0,1,0])
+%! g=eye(3); h=[g(2,:); g(3,:); g(1,:)]'; k=[g(3,:); g(1,:); g(2,:)]';
+%! assert(vector_product(g,h),k)
 
 #  end of vector_product.m 
