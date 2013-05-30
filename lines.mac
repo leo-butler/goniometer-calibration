@@ -34,8 +34,18 @@ vec(l,d) := block([pbar,vbar,p,v,u,w,np],
 
 includeif(l,p) := block([L:[]], map(lambda([x],if p(x) then L:append(L,[x])),l), L);
 critpoly(d,a,b) := (1+d)^2*d^2 + 2*(1+d)*b - a*(1+d)^2 - b;
+s(d,a,b) := -d-(a-b/(1+d))/d;
+define(d2s(d,a,b),rat(diff(s(d,a,b),d,2)));
+d2s(d,a,b) := -(2*a*d^3+(-6*b+6*a)*d^2+(-6*b+6*a)*d-2*b+2*a)/(d^6+3*d^5+3*d^4+d^3);
 
-mean_line(L) := block([pbar,vbar,u,a2,b2,d,eq],
+kill(cproots);
+cproots[a,b]() := sort(map(rhs,allroots(critpoly(d,a,b))),'lambda([u,v],is(realpart(u)>=realpart(v))));
+cprootsn(a,b,n) := block([r],
+  r:part(cproots[a,b](),n),
+  [a,b,realpart(r),imagpart(r)]);
+parts(x,[l]) := create_list(part(x,i),i,l);
+  
+mean_line(L) := block([pbar,vbar,u,d],
   pbar:mean(map(point,L)),
   vbar:mean(map(vector,L)),
   u:pbar/norm(pbar), w:vbar/(pbar.pbar),
@@ -43,9 +53,9 @@ mean_line(L) := block([pbar,vbar,u,a2,b2,d,eq],
   b2:(u.w)^2,
   eq:critpoly(d,a2,b2),
   drts:sort(map(rhs,allroots(eq))),
-  lines:map(lambda([d],if atom(d) then vec([pbar,vbar],d)),drts),
+  lines:map(lambda([d],vec([pbar,vbar],d)),drts),
   alpha:map(lambda([l],-vector(l).pbar),lines),
-  beta:map(lambda([l],-vector(l).vbar+1),lines),
+  beta:map(lambda([l],-vector(l).vbar),lines),
   lines
   );
 
@@ -54,10 +64,60 @@ N:10 $
 L:lines(N,3)$
 ml:mean_line(L)$
 map(lambda([l],fom(l,L)),ml);
+map(lambda([a,b],a^2/2+b),alpha,beta);
+map(lambda([d],s(d,a2,b2)),drts);
+map(lambda([d],d2s(d,a2,b2)),drts);
 drts;
+
 ml:mean_line([[[0,1,0],[1,0,0]], [[0,0,1],[0,1,0]], [[1,0,0],[0,0,1]]]);
 map(lambda([l],fom(l,L)),ml),numer;
 drts;
+
+if draw_loaded=true then done else (load('draw), draw_loaded:true);
+draw_contour(a,b,xmin,xmax,ymax) := block([c,r,g],
+  c:(xmin+xmax)/2, r:(xmax-xmin)/2, g:lambda([t],c-r*exp(%pi*%i*t)),
+  draw2d(
+    explicit(s(d,a,b),d,xmin,xmax),
+    parametric(xmin+2*d*r,realpart(s(g(d),a,b)),d,0,1),
+    yrange=[-ymax,ymax],
+    xrange=[xmin,xmax],
+    terminal='wxt,
+    xaxis=true,
+    yaxis=true));
+draw_c(a,b,ymax) := block([r],
+  r:map(realpart,cproots[a,b]()), draw_contour(a,b,r[2],r[1],ymax));
+draw_s(a,b,xmax,ymax) :=
+draw2d(
+  explicit(-d,d,-xmax,xmax),
+  explicit(s(d,a,b),d,-xmax,xmax),
+  yrange=[-ymax,ymax],
+  terminal='wxt,
+  xaxis=true,
+  yaxis=true,
+  points_joined=true,
+  points([[-1,-ymax],[-1,ymax]]));
+bdisc(a) := map(rhs,allroots(27*b*(b-a)+(1-a)^3));
+discp(a,b) := block([p,dp,d],
+  p:critpoly(d,a,b),dp:diff(p,d),factor(rat(resultant(p,dp,d))));
+plot_bdisc(amin,amax,n,[opts]) := block([a,b],
+  a:makelist(amin+i*(amax-amin)/n,i,0,n),
+  b:map(bdisc,a),
+  apply(draw3d,
+    append([terminal = 'wxt,
+      xlabel="a",ylabel="Re(b)",zlabel="Im(b)",
+      points(makelist([a[i],realpart(b[i][1]),imagpart(b[i][1])],i,1,n+1)),
+      points(makelist([a[i],realpart(b[i][2]),imagpart(b[i][2])],i,1,n+1)),
+      points_joined = true,
+      points([[amin,amin,0],[amax,amax,0]])],opts)),
+  makelist([a[i],b[i][1],b[i][2]],i,1,n+1));
+plot_bdisc(0.001,1.0,100,view=[0,0],label(["D<0",0.5,0.4,0],["D>0",0.2,0.15,0]),ztics=false);
+
+/* z<-1<y<=x<0<w */
+eqs:[x+y+z+w+2,1/x+1/y+1/z+1/w+2];
+e:2+2*z*y+y+z;
+de:collectterms(expand(rat([A,B] . map(diff,eqs) + diff(e))), del(z), del(y), del(x), del(w));
+de_list:map(lambda([u],subst(del=lambda([t],if t=u then 1 else 0),de)),[w,x,y,z]);
+solve(append(eqs,de_list),listofvars(de));
 
 
 
@@ -72,10 +132,9 @@ hess(l,alpha,beta) := block([lvar,Pvar,Vvar,a,b],
   subst(flatten(append(map("=",Pvar,point(l)),map("=",Vvar,vector(l)),[a=alpha,b=beta])),h)
   );
 
+diffat(f,x,a,[n]) := (if n=[] then n:1 else n:part(n,1), subst(x=a,diff(f,x,n)));
 
 eigvals(h) := block([x], map(rhs,allroots(determinant(h-x*ident(length(h))))));
-
-load(draw);
 
 remarray(r);
 plotroots(A,B) := block([roots,i,j,M,gf1,gf2,gf3,gf4,f1,f2,f3,f4,r],
