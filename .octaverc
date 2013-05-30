@@ -1,0 +1,2 @@
+# -*- mode:octave -*-
+warning ("off", "Octave:broadcast");
