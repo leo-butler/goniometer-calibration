@@ -56,7 +56,7 @@ function L = intersection_line (P,Q)
     if rows(q)==3
       q=q';
     endif
-    n=vector_product(p,q)';
+    n=vector_product(p,q);
     b=[P(4);Q(4);0];
     pt=([p;q;n] \ b)';
     v=n/norm(n);
@@ -67,7 +67,7 @@ endfunction
 %! a=0;
 %! P=[1,a,a,4];
 %! Q=[0,1,a,1];
-%! L=[4,1,0;0,0,-1];
+%! L=[4,1,0;0,0,1];
 %! M=intersection_line(P,Q);
 %! assert(dl2l(M,L),0)
 %! M=intersection_line(P',Q);
@@ -95,8 +95,5 @@ endfunction
 %! assert(dl2l(M,L),0,10*a)
 %!test
 %! assert(dl2l(L,M),0,a)
-%!test
-%! N=[5,2,1;0,0,1];
-%! assert(dl2l(N,M),3,10*a)
 
 #  end of intersection_line.m 
