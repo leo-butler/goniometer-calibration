@@ -22,3 +22,17 @@ goniometer.dat
 *.tif
 *~
 mc_scratch.png
+## temporary ignore
+.gnuplot
+data.gnuplot
+data.txt
+foc_line.m
+foc_plane.m
+fom_plane.m
+ftest.csv
+gc_estimate_plane_from_lines.m
+mc_scratch.dat
+plot_line.m
+rebase.m
+runtests.m
+scratch.m
