@@ -1,0 +1,34 @@
+ -- -*- Mode: text; Package: OCTAVE -*-
+ --
+ -- $Id$
+ --
+ -- Author: Leo Butler (l.butler@ed.ac.uk)
+ --
+ -- This file contains ETAGS regexps to identify functions, global
+ -- variables and comment lines beginning as #+key (i.e. #key, ##key,
+ --  etc.)
+ --
+ -- It is free software; you can redistribute it and/or modify
+ -- it under the terms of the GNU General Public License as published by
+ -- the Free Software Foundation; either version 3 of the License, or (at your
+ -- option) any later version.
+ --
+ -- This software is distributed in the hope that it will be useful, but
+ -- WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ -- or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public
+ -- License for more details.
+ --
+ -- You should have received a copy of the GNU General Public License
+ -- along with this file. If not, see http://www.gnu.org/licenses/.
+ --
+ -- prototype: for function
+ -- function errors = line_estimator_error (P,epsilon,randstate,N=2,grid=1)
+/^function[ \t]*\(?:.+=[ \t]*\|\)?\([[:alnum:]_]+\)[ \t]*(.*?)?/\1/i
+ -- prototype: global
+ -- global a_0 W \\n t0;
+/^global[ \t]+\(.*\)[ \t]*;/\1/
+ --/^[ \t]*global\(\(?:\(?:[ \t]+\|\(?:[ \t]*\\\(?:\n\|\r\|\f\|\r\f\|\f\r\)[ \t]*\)\)[[:alnum:]_]+\)+\)[ \t]*;*/\1/i
+/^#+key\(?:word\)*[ \t]+\(.*\)/\1/
+
+
+ -- end of octave.tags 

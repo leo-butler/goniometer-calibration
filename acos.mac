@@ -1,0 +1,9 @@
+/* correctly defined acos(cos(x))^2 */
+f(x):=if numberp(x) then (
+  if is(x < (-%pi)/2) then %pi^2/2-f(x+%pi)
+  elseif is(x > %pi/2) then %pi^2/2-f(x-%pi)
+  else acos(abs(cos(x)))^2) else 'f(x);
+plot2d([lambda([x],f(x)),
+  acos(abs(cos(x)))^2],
+  [x,-2*%pi,2*%pi],
+  [legend,"f","acos^2"]);

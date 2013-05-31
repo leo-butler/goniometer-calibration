@@ -19,86 +19,157 @@
 # You should have received a copy of the GNU General Public License
 # along with this file. If not, see http://www.gnu.org/licenses/.
 #
+source goniometer.m
 
-function t=obj(alpha)
+function t = obj (alpha)
+  ## usage:  t = obj (alpha)
+  ##
   ## An affine plane P in R^3 is determined uniquely by a unit normal n
   ## and constant c. The pair (n,c) is determined by P up to +-1.
   ##
   ## P : <n,x>=c  <==> (n,c)
   ##
-  ## Objective function alpha[n;c]:
+  ## obj(alpha) computes, with alpha=[n;c]=4x1 vector,
   ## 1/N\sum_i^N |<x_i,n>-c|^2
+  ## where the x_i are rows of the global variable sample_data
   global sample_data;
-  x=feval(sample_data);
-  N=rows(x);
+  N=rows(sample_data);
   c=alpha(4);
   n=alpha(1:3);
   n=n/norm(n);
-  t=(x*n-c)' * (x*n-c)/N;
+  t=norm(sample_data*n-c)^2/N;
 endfunction
+%!test
+%! global sample_data;
+%! epsilon=1e-8;
+%! sample_data=[1,0,0;0,1,0;2,1,0];
+%! assert(obj([0;0;1;0]),0)
+%! assert(obj([0;1;0;0]),2/3,epsilon)
 
-function t=norm_constraint(alpha)
-  ## alpha=[n;c]
-  ## return |n|-1
+function t = norm_constraint (alpha)
+  ## usage:  t = norm_constraint (alpha)
+  ## 
+  ## alpha = [n;c]
+  ## t = |n|-1.
   t=norm(alpha(1:3))-1;
 endfunction
+%!test
+%! assert(norm_constraint([1;1;1;0]),sqrt(3)-1)
 
-function v=xp(a,b)
-  ## vector product
-  v=[a(2)*b(3)-a(3)*b(2);-a(1)*b(3)+a(3)*b(1);a(1)*b(2)-a(2)*b(1)];
-endfunction
-
-function [y,n]=make_almost_planar_data(v1,v2,p,k,epsilon,grid=1)
-  ## [y,n]=make_almost_planar_data(v1,v2,p,k,epsilon)
-  ##
-  ## v1, v2 are independent 3-vectors parallel to plane P
-  ## p is a 3-vector in P
-  ## k is number of points
-  ## epsilon is std. dev. of errors
-  ##
-  ## y is k x 3 vector of points close to P
-  ## n is a unit normal to P
-  n=xp(v1,v2);
-  n=n/norm(n);
-  if grid==1
-    c=1;
-    for i=-k:k
-      for j=-k:k
-	y(c,1:3)=p+i*v1+j*v2+normrnd(0,epsilon,3,1);
-	++c;
-      endfor;
-    endfor;
-  else
-    for i=1:k
-      y(i,1:3)=p+normrnd(0,1)*v1+normrnd(0,1)*v2+normrnd(0,epsilon,3,1);
-    endfor;
-  endif;
-  [y',n];
-endfunction
-
-
-function error = estimator_error (x,v,use_constant=1)
-  ## usage:  error = estimator_error (x,v)
+function error = plane_obj (x,v,use_constant=1)
+  ## usage:  error = plane_obj (x,v)
   ##
   ## x=estimate
-  ## v=[n,c]=[true normal,true constant]
-  if rows(x)==3
+  ## v=[n;c]=[true normal;true constant]
+  ## both are column vectors
+  if rows(x)==3 && use_constant
     x=[x/norm(x);1/norm(x)];
   endif
   if use_constant==0
     x=x(1:3);
     v=v(1:3);
   endif
-  a=norm(x-v);
-  b=norm(x+v);
-  if a<b
-    error=a;
-  else
-    error=b;
-  endif
-  error;
+  error=min(norm(x-v),norm(x+v));
+endfunction
+%!test
+%! assert(plane_obj([1;1;3],[1;0;1;sqrt(2)]/sqrt(2)),0.88447,1e-5)
+%! assert(plane_obj([1;1;3]/sqrt(11),[1;0;1;1]/sqrt(2),0),0.54258,1e-5)
+%! assert(plane_obj([1;0;1;1],[1;0;1;1]),0)
+%! assert(plane_obj([-1;0;-1;-1],[1;0;1;1]),0)
+
+function [P,obj,info,iter,nf,lambda,cons] = plane_goniometer (filename,niter=45,epsilon=1e-8)
+  ## usage:  plane_goniometer (filename,niter=45,epsilon=1e-8)
+  ##
+  ## Compute least squares planes from data in filename.
+  global objectivefn_data objectivefn_partition sample_data;
+  goniometer_data=read_goniometer_data(filename);
+  [objectivefn_data,objectivefn_partition]=gpartition(goniometer_data);
+  goniometer_rebase_zdata();
+  [P,obj,info,iter,nf,lambda,cons] = __planes();
+endfunction
+%!test
+%! epsilon=1e-6;
+%! filename="goniometer_test.dat";
+%! P=[0,0,1,0;1,0,0,0;0,1,0,0]';
+%! [Q,obj,info,iter,nf,lambda,cons]=plane_goniometer(filename);
+%! s=0; for i=1:3 s+=plane_obj(P(:,i),Q(:,i)); endfor;
+%! assert(s,0,epsilon);
+%! assert(norm(info-101),0);
+%! assert(norm(obj),0,epsilon);
+%! assert(norm(cons),0,epsilon);
+
+function [L,obj,info,iter,nf,lambda] = line_plane_goniometer (filename,niter=125,epsilon=1e-8)
+  ## usage:  [L,obj,info,iter,nf,lambda] = line_plane_goniometer (filename)
+  ##
+  ## reads data in file 'filename', computes CLSQ planes through
+  ## these points, then the CLSQ line fitting those planes
+  global objectivefn_data objectivefn_partition;
+  P=plane_goniometer(filename,niter,epsilon);
+  objectivefn_lines=__lines(P);
+  L0=reshape(objectivefn_lines(1:2,:)',6,1);
+  [L,obj,info,iter,nf,lambda]=line_estimator(L0,[],[],niter,epsilon);
 endfunction
 
+function [P,obj,info,iter,nf,lambda,cons] = __planes (niter=125,epsilon=1e-8)
+  ## usage:  [P,obj,info,iter,nf,lambda,cons] = __planes (niter=125,epsilon=1e-8)
+  ##
+  ## given data in objectivefn_data/partition, computes CLSQ planes
+  ## through these points
+  global objectivefn_data objectivefn_partition sample_data;
+  n=columns(objectivefn_partition);
+  P=zeros(4,n);
+  obj=zeros(n,1);
+  info=zeros(n,1);
+  iter=zeros(n,1);
+  nf=zeros(n,1);
+  lambda=zeros(n,1);
+  cons=zeros(n,1);
+  b=0;
+  f=0;
+  for i=1:n
+    b=f+1;
+    f=b-1+objectivefn_partition(1,i);
+    sample_data=objectivefn_data(b:f,:);
+    P0=plane(sample_data(1:3,:)) + randn(4,1)*1e-2;
+    P0(1:3)/=norm(P0(1:3));
+    [P(:,i),obj(i),info(i),iter(i),nf(i),lambda(i)]=plane_estimator(P0,[],[],niter,epsilon);
+    cons(i)=norm_constraint(P(:,i));
+  endfor  
+endfunction
+%!test
+%! epsilon=1e-6;
+%! global objectivefn_data objectivefn_partition objectivefn_lines;
+%! objectivefn_data=[1,0,0;0,1,0;2,3,0; 1,0,0;0,0,1;2,0,3; 0,1,0;0,0,1;0,2,5];
+%! objectivefn_partition=[3,3,3;3,3,3];
+%! P=[0,0,1,0; 0,1,0,0; 1,0,0,0]';
+%! [Q,obj,info,iter,nf,lambda,cons] = __planes();
+%! s=0; for i=1:3 s+=plane_obj(P(:,i),Q(:,i)); endfor;
+%! assert(s,0,epsilon);
+%! assert(norm(info-101),0);
+%! assert(norm(obj),0,epsilon);
+%! assert(norm(cons),0,epsilon);
+
+function L = __lines (P,niter=125,epsilon=1e-8)
+  ## usage:  L = __lines (P,niter=125,epsilon=1e-8)
+  ##
+  ## Computes intersections of planes defined by columns of P
+  Ps=powerset(P',2,"rows")';
+  L=zeros(2*columns(Ps),3);
+  i=1;
+  for l=Ps
+    P0=l(1:4);
+    P1=l(5:8);
+    L(i:i+1,:)=intersection_line(P0,P1);
+    i+=2;
+  endfor
+endfunction
+%!test
+%! epsilon=1e-8;
+%! P=[0,0,1,0; 0,1,0,0; 1,0,0,0]';
+%! L=[0,0,0; 1,0,0; 0,0,0; 0,1,0; 0,0,0; 0,0,-1 ];
+%! M=__lines(P);
+%! s=0; for i=1:2:6 s+=dl2l(L(i:i+1,:),M(i:i+1,:)); endfor;
+%! assert(s,0,epsilon);
 
 function errors = estimator_error_in_sample_s (randstate,a,b,steps,v1,v2,p,epsilon,use_constant=1,grid=1)
   ## usage:  errors = estimator_error_in_sample_s (randstate,a,b,steps,v1,v2,p,epsilon,use_constant=1,grid=1)
@@ -140,10 +211,43 @@ function errors = estimator_error_in_sample_s (randstate,a,b,steps,v1,v2,p,epsil
   errors;
 endfunction
 
+function [P,obj,info,iter,nf,lambda] = plane_estimator (P0,PUP=[],POW=[],maxiter=125,epsilon=1e-8)
+  ## usage:  [P,obj,info,iter,nf,lambda] = plane_estimator (P0,PUP,POW,maxiter=125,epsilon=1e-8)
+  ##
+  ## estimates P given P0 (a 4x1 column vector)
+  [P,obj,info,iter,nf,lambda]=sqp(P0,@obj,@norm_constraint,[],PUP,POW,maxiter,epsilon);
+endfunction
+%!test
+%! global sample_data;
+%! sample_data=[1,0,0;0,1,0;2,1,0;4,3,0];
+%! P0=[0;0;1;0];
+%! [P,obj,info,iter,nf,lambda] = plane_estimator (P0);
+%! assert(plane_obj(P,P0),0)
+%! assert(obj,0)
+%! assert(info,101)
+%! assert(iter,1)
+%! assert(norm(lambda),0)
+%!test
+%! global sample_data;
+%! sample_data=[1,0,4;0,1,4;2,1,4;4,3,4];
+%! epsilon=1e-5;
+%! P0=[0;0;1;4];
+%! [P,obj,info,iter,nf,lambda] = plane_estimator (P0);
+%! assert(norm_constraint(P),0,epsilon);
+%! assert(plane_obj(P,P0),0)
+%! assert(obj,0)
+%! assert(info,101)
+%! assert(iter,1)
+%! assert(norm(lambda),0)
+%! P0=[2;1;1;0]/sqrt(6);
+%! [P,obj,info,iter,nf,lambda] = plane_estimator (P0);
+%! assert(norm_constraint(P),0,epsilon);
+%! assert(plane_obj(P,[0;0;1;4]),0,epsilon)
 
  ##
  ## A simple example
  ##
+function __plane_simple_example()
  global sample_data;
  load "randstate.m";
  rand("state",randstate);
@@ -197,3 +301,6 @@ plot(errors(:,1),errors(:,3),"*;ols;",errors(:,1),errors(:,2),"+;constrained lsq
 plot(e_n,mean(e_cls),"+",e_n,mean(e_ols),"*")
 hold off;
 print -deps errors.eps
+endfunction
+## end of plane.m
+
