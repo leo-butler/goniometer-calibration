@@ -20,14 +20,14 @@
 ## along with this file. If not, see http://www.gnu.org/licenses/.
 ##
 
-function estimate = mc_planar_line_estimate (planes,focal_depths,focal_depth_normal,N=10,sigma=1)
-  pld=mc_planar_line_data(planes,focal_depths,focal_depth_normal,N,sigma);
+function estimate = mc_planar_line_estimate (planes,focal_depths,focal_plane_normal,N=10,sigma=1)
+  pld=mc_planar_line_data(planes,focal_depths,focal_plane_normal,N,sigma);
   estimate.planar_line_data_str=pld;
   ## l = best fit line
   ## L = pairwise intersections of best fit planes
   ## P = best fit planes
   ## G = best fit frames of planes
-  [l,L,P,G] = estimator_closed_form(pld,focal_depth_normal,1e-9,1);
+  [l,L,P,G] = estimator_closed_form(pld,focal_plane_normal,1e-9,1);
   estimate.estimate=struct("l",l,"L",L,"P",P,"G",G);
 endfunction
 %!shared planes, focal_depths, focal_plane_normal, epsilon, sigma, N
