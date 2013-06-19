@@ -4,6 +4,7 @@
 #added scaling factor to shrink values to fit in blender scene
 #point size now proportional to smallest error
 #05: set tmat on object not on mesh such that local translation along xy is possible
+#06: read in first plane normal, then plane offset
 
 import math
 import sys,os,getopt
@@ -182,8 +183,8 @@ while True:
       if line:
          dl = map(float, line[1:])
          index= dl[0]
-         pos= [x*options.s for x in dl[1:4]]
-         n= [x*options.s for x in dl[4:7]]
+         n= [x*options.s for x in dl[1:4]]
+         pos= [x*options.s for x in dl[4:7]]
          
          ##calculate the rotation matrix for blender
          #calculate the rotation angles
