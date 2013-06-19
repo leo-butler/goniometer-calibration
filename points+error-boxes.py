@@ -3,6 +3,7 @@
 #drawing a plane from #plane line
 #added scaling factor to shrink values to fit in blender scene
 #point size now proportional to smallest error
+#05: set tmat on object not on mesh such that local translation along xy is possible
 
 import math
 import sys,os,getopt
@@ -220,10 +221,11 @@ while True:
 
          #me= ob.getData(mesh=1) #blender shows the obj. according to its matrix
          #me.transform(tmat)#but does not apply it on the obj verts
-         mplane.transform(tmat)
+         #mplane.transform(tmat)
          obn= "plane_%0.4d" % index
          ob= sc.objects.new(mplane, obn) # add a new mesh-type object to the scene
-         ob.setMatrix(ob.matrix.identity())#set identity to avoid double effect
+         #ob.setMatrix(ob.matrix.identity())#set identity to avoid double effect
+         ob.setMatrix(tmat)#set identity to avoid double effect
          print B.Mathutils.Vector(n)*B.Mathutils.Vector(n)
          #print centre*B.Mathutils.Vector(n)
          #print (centre*B.Mathutils.Vector(n))*B.Mathutils.Vector(n)
