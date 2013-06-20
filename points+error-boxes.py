@@ -5,6 +5,9 @@
 #point size now proportional to smallest error
 #05: set tmat on object not on mesh such that local translation along xy is possible
 #06: read in first plane normal, then plane offset
+#07: changed calculation of rot-mat to Euler axis and angle representation, centering not yet working
+
+
 
 import math
 import sys,os,getopt
@@ -185,16 +188,32 @@ while True:
          index= dl[0]
          n= [x*options.s for x in dl[1:4]]
          pos= [x*options.s for x in dl[4:7]]
+           
+         ## Euler axis and angle representation
+         N= B.Mathutils.Vector(n)
+         print N*N
+         N.normalize()
+         print N*N
          
-         ##calculate the rotation matrix for blender
-         #calculate the rotation angles
-         alpha= n[1]/math.fabs(n[1]) * math.acos(n[2]/(math.sqrt(n[1]**2 + n[2]**2)));
-         beta = n[0]/math.fabs(n[0]) * math.acos((math.sqrt(n[1]**2 + n[2]**2))/(math.sqrt(n[0]**2 + n[1]**2 + n[2]**2)));
+         P= B.Mathutils.Vector([0,0,1])
+         P.normalize()
+         #theta= N*P #angle in rad!!!
+         theta= B.Mathutils.AngleBetweenVecs(N,P) #angle in deg!!!
+         print theta
+         e= N.cross(P)
+         
+         ## Euler axis/angle -> rot-mat (Rodrigues' rotation: http://en.wikipedia.org/wiki/Rotation_formalisms_in_three_dimensions#Rotation_matrix_.E2.86.94_Euler_axis.2Fangle )
+         # E= B.Mathutils.Matrix([0, -e[2], e[1]], [e[2], 0, -e[0]], [-e[1], e[0], 0]);
+         # rot= B.Mathutils.Matrix().identity()*math.cos(theta)+(1-math.cos(theta))*e*e.transpose()+E*math.sin(theta)
+         
+         ##or with quats
+         # quat= B.Mathutils.Quaternion(e, theta)
+         # rot= quat.toMatrix()
 
-         #calculate the rotation matrix from the rot. angles
-         rotX = B.Mathutils.Matrix([1, 0, 0, 0], [0, math.cos(alpha), -math.sin(alpha), 0], [0, math.sin(alpha), math.cos(alpha), 0], [0,0,0,1]);
-         rotY = B.Mathutils.Matrix([math.cos(beta), 0, -math.sin(beta), 0], [0, 1, 0, 0], [math.sin(beta), 0, math.cos(beta), 0], [0,0,0,1]);
-  
+         ##or get matrix straight away ;-)
+         rot= B.Mathutils.RotationMatrix(theta, 4, 'r', e) #angle in deg!!!
+         print rot
+         
          min_ext= B.Mathutils.Vector(min_pos)
          max_ext= B.Mathutils.Vector(max_pos)
          diagonal= max_ext - min_ext
@@ -207,14 +226,8 @@ while True:
          ymat= B.Mathutils.ScaleMatrix(diagonal.y,4,B.Mathutils.Vector(0,1,0))
          #zmat= B.Mathutils.ScaleMatrix(dx[2],4,B.Mathutils.Vector(0,0,1))
 
-         #tmat= (rotY*rotX) #####Order matters!!! Has to be rotZ*rotY*rotX!!!!
-         tmat= (xmat*ymat)*(rotY*rotX) #####Order matters!!! Has to be rotZ*rotY*rotX!!!!
-         #tmat= (xmat*ymat)*cmat*(rotY*rotX) #####Order matters!!! Has to be rotZ*rotY*rotX!!!!
-         #tmat= (rotX.transpose()*rotY.transpose())
-         #tmat= (rotX.invert()*rotY.invert())
-         #print tmat
-
-         #plane 
+         #tmat= rot.invert() #####Order matters!!! Has to be rotZ*rotY*rotX!!!!
+         tmat= xmat*ymat*rot.invert() #####Order matters!!! Has to be rotZ*rotY*rotX!!!!
 
          edge_len=1
          mplane= B.Mesh.Primitives.Plane(edge_len) #create a plane with edge length 1 in xy-plane
@@ -227,7 +240,6 @@ while True:
          ob= sc.objects.new(mplane, obn) # add a new mesh-type object to the scene
          #ob.setMatrix(ob.matrix.identity())#set identity to avoid double effect
          ob.setMatrix(tmat)#set identity to avoid double effect
-         print B.Mathutils.Vector(n)*B.Mathutils.Vector(n)
          #print centre*B.Mathutils.Vector(n)
          #print (centre*B.Mathutils.Vector(n))*B.Mathutils.Vector(n)
          #ob.setLocation(B.Mathutils.Vector(pos) + centre - ((centre*B.Mathutils.Vector(n))*B.Mathutils.Vector(n)))#transl obj only not the mesh
