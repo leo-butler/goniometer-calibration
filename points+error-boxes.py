@@ -6,7 +6,7 @@
 #05: set tmat on object not on mesh such that local translation along xy is possible
 #06: read in first plane normal, then plane offset
 #07: changed calculation of rot-mat to Euler axis and angle representation, centering not yet working
-
+#08: added plotting of estimated iline
 
 
 import math
@@ -26,7 +26,7 @@ if '--' not in argv:
 else:
    argv = argv[argv.index('--')+1: ]  # get all args after "--"
 
-point_size= .1 #1/10th of the smallest error
+point_size= .3 # relative scaling to smallest error
 
 # When --help or no args are given, print this help
 usage_text =  'Run blender in background mode with this script:'
@@ -93,12 +93,21 @@ matb.mode |= B.Material.Modes.ZTRANSP    # turn on Z-Buffer transparency
 
 ##material for the fitted plane
 matplane = B.Material.New('plane_mat')         
-matplane.rgbCol = [options.r, options.g, options.b]          # change its color
-matplane.setAlpha(1)                     # mat.alpha = 0.2 -- almost transparent
+#matplane.rgbCol = [options.r, options.g, options.b]          # change its color
+matplane.rgbCol = [0, 0, 1]          # change its color
+matplane.setAlpha(.5)                     # mat.alpha = 0.2 -- almost transparent
 matplane.emit = 0.8                        # equivalent to mat.setEmit(0.8)
 #matb.mode |= B.Material.Modes.VCOL_PAINT # turn on vertex colouring
 matplane.mode |= B.Material.Modes.ZTRANSP    # turn on Z-Buffer transparency
 
+##material for the fitted iline
+mati= B.Material.New('iline_mat')       # normals and inside faces
+mati.rgbCol = [0, 0, 0]          # change its color
+mati.setAlpha(0.5)                     # mat.alpha = 0.2 -- almost transparent
+mati.emit = 0.6                        # equivalent to mat.setEmit(0.8)
+mati.spec = 0
+mati.mode |= B.Material.Modes.WIRE # turn on vertex colouring
+mati.mode |= B.Material.Modes.ZTRANSP    # turn on Z-Buffer transparency
 
 
 w= B.World.Get('World') #assume there exists a world named "world"
@@ -181,10 +190,11 @@ while True:
    in_line = in_line[:-1] #drop last char '\n' ;-)
    if (len(in_line) == 0): #skip empty lines
       continue 
-   if ("#plane"in in_line): #draw the plane
+   if ("#fplane" in in_line): #draw the plane
       line= in_line.split() #split at white space
       if line:
-         dl = map(float, line[1:])
+         print "Caught: ", line
+         dl = map(float, line[1:]) #skip '#plane'
          index= dl[0]
          n= [x*options.s for x in dl[1:4]]
          pos= [x*options.s for x in dl[4:7]]
@@ -245,9 +255,66 @@ while True:
          #ob.setLocation(B.Mathutils.Vector(pos) + centre - ((centre*B.Mathutils.Vector(n))*B.Mathutils.Vector(n)))#transl obj only not the mesh
          ob.setLocation(pos[0], pos[1], pos[2])#transl obj only not the mesh
          ob.drawMode |= B.Object.DrawModes.TRANSP
-        
-
       continue 
+        
+   if ("#iline" in in_line): #draw the iline
+      line= in_line.split() #split at white space
+      if line:
+         print "Caught: ", line
+         dl = map(float, line[1:]) #skip '#iline'
+         index= dl[0]
+
+         obn= "iline_%0.4d" % index
+
+         n= [x*options.s for x in dl[1:4]]
+         pos= [x*options.s for x in dl[4:7]]
+         
+         n_mesh = bpy.data.meshes.new(obn)#create a new mesh, len(name) <= 20!
+
+         ##create rotated mesh
+         # c= B.Mathutils.Vector(pos)
+         # v= B.Mathutils.Vector(n)
+
+         # n_mesh.verts.extend(c) #add centre vertex
+         # n_mesh.verts.extend(c + v) #add direction vertex
+         # n_mesh.edges.extend(n_mesh.verts[-2], n_mesh.verts[-1])#create a line between the last two added verts
+
+         ##better rotate object:
+         ##create mesh (not rotated)
+         n_mesh.verts.extend(B.Mathutils.Vector([0,0,0])) #add centre vertex
+         n_mesh.verts.extend(B.Mathutils.Vector([0,0,1])) #add direction vertex
+         n_mesh.edges.extend(n_mesh.verts[-2], n_mesh.verts[-1])#create a line between t
+
+
+         ## Euler axis and angle representation
+         N= B.Mathutils.Vector(n)
+         print N*N
+         N.normalize()
+         print N*N
+         
+         P= B.Mathutils.Vector([0,0,1])
+         P.normalize()
+         #theta= N*P #angle in rad!!!
+         theta= B.Mathutils.AngleBetweenVecs(N,P) #angle in deg!!!
+         print theta
+         e= N.cross(P)
+         
+         ##or get matrix straight away ;-)
+         rot= B.Mathutils.RotationMatrix(theta, 4, 'r', e) #angle in deg!!!
+         print rot
+
+
+         tmat= rot.invert() #####Order matters!!! Has to be rotZ*rotY*rotX!!!!
+
+
+         n_mesh.materials= [mati]
+         ob= scn.objects.new(n_mesh, obn)
+
+         ##rotate object:
+         ob.setMatrix(tmat)#set identity to avoid double effect
+         ob.setLocation(pos[0], pos[1], pos[2])#transl obj only not the mesh
+      continue 
+
    if (in_line[0] == "#"): #skip comments
       continue 
    line= in_line.split() #split at white space
