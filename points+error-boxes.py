@@ -7,7 +7,7 @@
 #06: read in first plane normal, then plane offset
 #07: changed calculation of rot-mat to Euler axis and angle representation, centering not yet working
 #08: added plotting of estimated iline
-
+#09: added plotting of error-ellipsoid (error in p) and the elliptic error cone (EDC) (error in v)
 
 import math
 import sys,os,getopt
@@ -109,6 +109,24 @@ mati.spec = 0
 mati.mode |= B.Material.Modes.WIRE # turn on vertex colouring
 mati.mode |= B.Material.Modes.ZTRANSP    # turn on Z-Buffer transparency
 
+##material for the error ellipsoid
+mateell = B.Material.New('eell_mat')         
+#matplane.rgbCol = [options.r, options.g, options.b]          # change its color
+mateell.rgbCol = [1, 1, 0]          # change its color
+mateell.setAlpha(.5)                     # mat.alpha = 0.2 -- almost transparent
+mateell.emit = 0.8                        # equivalent to mat.setEmit(0.8)
+#matb.mode |= B.Material.Modes.VCOL_PAINT # turn on vertex colouring
+mateell.mode |= B.Material.Modes.ZTRANSP    # turn on Z-Buffer transparency
+
+##material for the error EDC
+mateEDC = B.Material.New('eell_mat')         
+#matplane.rgbCol = [options.r, options.g, options.b]          # change its color
+mateEDC.rgbCol = [1, 1, 0]          # change its color
+mateEDC.setAlpha(.5)                     # mat.alpha = 0.2 -- almost transparent
+mateEDC.emit = 0.8                        # equivalent to mat.setEmit(0.8)
+#matb.mode |= B.Material.Modes.VCOL_PAINT # turn on vertex colouring
+mateEDC.mode |= B.Material.Modes.ZTRANSP    # turn on Z-Buffer transparency
+
 
 w= B.World.Get('World') #assume there exists a world named "world"
 w.hor = [1,1,1] #make the backgroung white
@@ -189,6 +207,9 @@ while True:
 
    in_line = in_line[:-1] #drop last char '\n' ;-)
    if (len(in_line) == 0): #skip empty lines
+      continue 
+   if (in_line[0:2] == "##"): #skip lines starting with double ##
+      print "Caught comment: ", in_line
       continue 
    if ("#fplane" in in_line): #draw the plane
       line= in_line.split() #split at white space
@@ -313,6 +334,79 @@ while True:
          ##rotate object:
          ob.setMatrix(tmat)#set identity to avoid double effect
          ob.setLocation(pos[0], pos[1], pos[2])#transl obj only not the mesh
+      continue 
+
+   if ("#eell" in in_line): #create the error-ellipsoid (error in p)
+      line= in_line.split() #split at white space
+      if line:
+         print "Caught: ", line
+         dl = map(float, line[1:]) #skip '#eell'
+         index= dl[0]
+         abc= [x*options.s for x in dl[1:4]]
+         rot= [x*options.s for x in dl[4:13]]
+         pos= [x*options.s for x in dl[13:16]]
+         
+         #print rot[0:3]
+         rmat= B.Mathutils.Matrix([rot[0], rot[1], rot[2], 0], [rot[3], rot[4], rot[5], 0], [rot[6], rot[7], rot[8], 0], [0,0,0,1])         
+
+         xmat= B.Mathutils.ScaleMatrix(abc[0],4,B.Mathutils.Vector(1,0,0))
+         ymat= B.Mathutils.ScaleMatrix(abc[1],4,B.Mathutils.Vector(0,1,0))
+         zmat= B.Mathutils.ScaleMatrix(abc[2],4,B.Mathutils.Vector(0,0,1))
+         
+         tmat= (xmat*ymat*zmat)*rmat
+
+
+         segments=32
+         rings=32
+         diameter=1.0 #expecting ell-axes to be full width!!!
+
+         me= B.Mesh.Primitives.UVsphere(segments, rings, diameter)
+         me.materials= [mateell]
+         
+         obn= "Eellipsoid_%0.4d" % index
+         ob= sc.objects.new(me, obn) # add a new mesh-type object to the scene
+
+         ob.setMatrix(tmat)#set identity to avoid double effect
+         ob.setLocation(pos[0], pos[1], pos[2])#transl obj only not the mesh
+         ob.drawMode |= B.Object.DrawModes.TRANSP
+      continue 
+
+   if ("#eEDC" in in_line): #create the EDC (error in v)
+      line= in_line.split() #split at white space
+      if line:
+         print "Caught: ", line
+         dl = map(float, line[1:]) #skip '#eEDC'
+         index= dl[0]
+         ab=  [x*options.s for x in dl[1:3]]
+         rot= [x*options.s for x in dl[3:12]]
+         pos= [x*options.s for x in dl[12:15]]
+         
+         #print rot[0:3]
+         rrmat= B.Mathutils.Matrix([rot[0], rot[1], rot[2], 0], [rot[3], rot[4], rot[5], 0], [rot[6], rot[7], rot[8], 0], [0,0,0,1])         
+
+         #rmat= B.Mathutils.RotationMatrix(90, 4, 'y') ##rot in deg not rad!!! 90/180*math.pi
+         #rmat= B.Mathutils.RotationMatrix(90, 4, 'y').invert() * rrmat
+         #rmat= rrmat * B.Mathutils.RotationMatrix(90, 4, 'y')
+         #rmat= rrmat + B.Mathutils.RotationMatrix(90, 4, 'y')##strangly this works...
+         rmat= rrmat ##doing local rot manually in blender
+         xmat= B.Mathutils.ScaleMatrix(ab[0],4,B.Mathutils.Vector(1,0,0))
+         ymat= B.Mathutils.ScaleMatrix(ab[1],4,B.Mathutils.Vector(0,1,0))
+         zmat= B.Mathutils.Matrix().identity()
+         
+         tmat= (xmat*ymat*zmat)*rmat
+
+         ##Cone points in z, centre @ hight/2 
+         me= B.Mesh.Primitives.Cone(32, 1.0, 1.0) ##segments, radius, height
+         me.materials= [mateEDC]
+         
+         obn= "EEDC_%0.4d" % index
+         ob= sc.objects.new(me, obn) # add a new mesh-type object to the scene
+
+         ob.setMatrix(tmat)
+         #ob.setMatrix(tmat.invert()*B.Mathutils.RotationMatrix(90, 4, 'y')*tmat)
+         #ob.setMatrix(tmat.rotationPart().invert()*B.Mathutils.RotationMatrix(90, 3, 'y')*tmat.rotationPart())
+         ob.setLocation(pos[0], pos[1], pos[2])#transl obj only not the mesh
+         ob.drawMode |= B.Object.DrawModes.TRANSP
       continue 
 
    if (in_line[0] == "#"): #skip comments
