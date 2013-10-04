@@ -2,6 +2,8 @@
 ### call
 # octave ~/publications/rot_axis_eval/blender_vis/octave2blender_01.m ~/publications/rot_axis_eval/rep_svn_121119/goniometer-calibration/data/mc+gc5.dat 
 
+#02: export data for error-ellipsoid (error in p)
+#todo: calc pos and scale factor for the planes
 
 out_fn="pool_estimate";
 
@@ -74,15 +76,41 @@ fprintf(fid, "#iline\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n", i, gc5{i}.estimate.l(4:6), 
 
 #####additions for viz of estimate-error
 
-###extract data needed for oriented error ellipsoid
+###extract data needed for oriented error ellipsoid (error in p)
 ##first extract a,b,c for ellipsoid
 ##second extract alpha,beta,gamma for ellipsoid orientation
-##move ellipsoid to p (closest point 0) or to avg of all t???
+##move ellipsoid to p (closest point 0)
 
-###extract data needed for oriented elliptic-error-cone
+pcov=gc5{i}.cov(1:3,1:3); ##same as cov(gc5{i}.lest(1:3,:)')
+[u,w]=eig(pcov);
+u= u * diag([sign(det(u)),1,1]); ##make u right-handed 
+#diag(sqrt(w))
+##print a, b, c, rot-mat, transl vector
+fprintf(fid, "##eell:\ti\ta\tb\tc\tr11\tr12\tr13\tr21\tr22\tr23\tr31\tr32\tr33\td1\td2\td3\n");
+#fprintf(fid, "#eell\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n", i, diag(sqrt(w)), reshape(u,1,9), gc5{i}.estimate.l(1:3));
+fprintf(fid, "#eell\t%d", i);
+fprintf(fid, "\t%f", diag(sqrt(w)), reshape(u,1,9), gc5{i}.estimate.l(1:3));
+fprintf(fid, "\n");
+
+###extract data needed for oriented elliptic-error-cone (error in v)
 ##first extract a,b for ellipse
-##second extract alpha,beta for ellipse orientation
+##second extract alpha,beta,gamma for ellipse orientation
 ##move double-cone to same pos as error-ellipsoid
+
+#vest=cellfun(@(gc) gc.lest(4:6,:), gc5, 'UniformOutput', false);
+#cov_vest=cellfun(@(v) cov(v'), vest, 'UniformOutput', false);
+#[u,w]=eig(cov_vest{1});
+vest=gc5{i}.lest(4:6,:);
+cov_vest=cov(vest'); ##same as gc5{i}.cov(4:6,4:6)
+[u,w]=eig(cov_vest);
+u= u * diag([sign(det(u)),1,1]); ##make u right-handed (not the case for e.g. i==4)
+##print a, b of ellipse rot-mat of EDC, transl vector
+fprintf(fid, "##eEDC:\ti\ta\tb\tr11\tr12\tr13\tr21\tr22\tr23\tr31\tr32\tr33\td1\td2\td3\n");
+#fprintf(fid, "#eEDC\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n", i, diag(sqrt(w))(2:3), reshape(u,1,9), gc5{i}.estimate.l(1:3));
+fprintf(fid, "#eEDC\t%d", i);
+fprintf(fid, "\t%f", diag(sqrt(w))(2:3), reshape(u,1,9), gc5{i}.estimate.l(1:3));
+fprintf(fid, "\n");
+
 
 fclose(fid);
 printf("Creating file %s done.\n", fn)
