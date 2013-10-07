@@ -8,6 +8,7 @@
 #07: changed calculation of rot-mat to Euler axis and angle representation, centering not yet working
 #08: added plotting of estimated iline
 #09: added plotting of error-ellipsoid (error in p) and the elliptic error cone (EDC) (error in v)
+#10: added double cone plotting and ilineC
 
 import math
 import sys,os,getopt
@@ -112,7 +113,7 @@ mati.mode |= B.Material.Modes.ZTRANSP    # turn on Z-Buffer transparency
 ##material for the error ellipsoid
 mateell = B.Material.New('eell_mat')         
 #matplane.rgbCol = [options.r, options.g, options.b]          # change its color
-mateell.rgbCol = [1, 1, 0]          # change its color
+mateell.rgbCol = [1, 0, 0]          # change its color
 mateell.setAlpha(.5)                     # mat.alpha = 0.2 -- almost transparent
 mateell.emit = 0.8                        # equivalent to mat.setEmit(0.8)
 #matb.mode |= B.Material.Modes.VCOL_PAINT # turn on vertex colouring
@@ -334,6 +335,18 @@ while True:
          ##rotate object:
          ob.setMatrix(tmat)#set identity to avoid double effect
          ob.setLocation(pos[0], pos[1], pos[2])#transl obj only not the mesh
+
+
+         me= B.Mesh.Primitives.Cylinder(32, 1, 10)
+         me.materials= [mati]
+
+         obn= "ilineC_%0.4d" % index
+         ob= sc.objects.new(me, obn) # add a new mesh-type object to the scene
+
+         ob.setMatrix(tmat)#set identity to avoid double effect
+         ob.setLocation(pos[0], pos[1], pos[2])#transl obj only not the mesh
+         ob.drawMode |= B.Object.DrawModes.TRANSP
+
       continue 
 
    if ("#eell" in in_line): #create the error-ellipsoid (error in p)
@@ -343,18 +356,20 @@ while True:
          dl = map(float, line[1:]) #skip '#eell'
          index= dl[0]
          abc= [x*options.s for x in dl[1:4]]
-         rot= [x*options.s for x in dl[4:13]]
+         rot= [x for x in dl[4:13]] ##do not scale!!!
          pos= [x*options.s for x in dl[13:16]]
          
+         print "scale a,b,c:", abc
          #print rot[0:3]
+
          rmat= B.Mathutils.Matrix([rot[0], rot[1], rot[2], 0], [rot[3], rot[4], rot[5], 0], [rot[6], rot[7], rot[8], 0], [0,0,0,1])         
 
          xmat= B.Mathutils.ScaleMatrix(abc[0],4,B.Mathutils.Vector(1,0,0))
          ymat= B.Mathutils.ScaleMatrix(abc[1],4,B.Mathutils.Vector(0,1,0))
          zmat= B.Mathutils.ScaleMatrix(abc[2],4,B.Mathutils.Vector(0,0,1))
          
+         print "scale part of the rotation matrix:", rmat.scalePart()
          tmat= (xmat*ymat*zmat)*rmat
-
 
          segments=32
          rings=32
@@ -377,27 +392,36 @@ while True:
          print "Caught: ", line
          dl = map(float, line[1:]) #skip '#eEDC'
          index= dl[0]
-         ab=  [x*options.s for x in dl[1:3]]
-         rot= [x*options.s for x in dl[3:12]]
+         ab=  [x for x in dl[1:3]] ##do not scale ab as this is fixed to h==1!!!
+         rot= [x for x in dl[3:12]]##do not scale!!!
          pos= [x*options.s for x in dl[12:15]]
-         
+         print "scale a,b:", ab
          #print rot[0:3]
-         rrmat= B.Mathutils.Matrix([rot[0], rot[1], rot[2], 0], [rot[3], rot[4], rot[5], 0], [rot[6], rot[7], rot[8], 0], [0,0,0,1])         
+
+         #rrmat= B.Mathutils.Matrix([rot[0], rot[1], rot[2], 0], [rot[3], rot[4], rot[5], 0], [rot[6], rot[7], rot[8], 0], [0,0,0,1])         
+         rrmat= B.Mathutils.Matrix([rot[0], rot[1], rot[2]], [rot[3], rot[4], rot[5]], [rot[6], rot[7], rot[8]])         
+         rrmat.resize4x4()
 
          #rmat= B.Mathutils.RotationMatrix(90, 4, 'y') ##rot in deg not rad!!! 90/180*math.pi
          #rmat= B.Mathutils.RotationMatrix(90, 4, 'y').invert() * rrmat
-         #rmat= rrmat * B.Mathutils.RotationMatrix(90, 4, 'y')
+         #rmat= rrmat * B.Mathutils.RotationMatrix(-90, 4, 'y')
          #rmat= rrmat + B.Mathutils.RotationMatrix(90, 4, 'y')##strangly this works...
          rmat= rrmat ##doing local rot manually in blender
          xmat= B.Mathutils.ScaleMatrix(ab[0],4,B.Mathutils.Vector(1,0,0))
          ymat= B.Mathutils.ScaleMatrix(ab[1],4,B.Mathutils.Vector(0,1,0))
          zmat= B.Mathutils.Matrix().identity()
          
+         print "scale part of the rotation matrix:", rmat.scalePart()
+
          tmat= (xmat*ymat*zmat)*rmat
+         #tmat= (xmat*ymat*zmat)
 
          ##Cone points in z, centre @ hight/2 
          me= B.Mesh.Primitives.Cone(32, 1.0, 1.0) ##segments, radius, height
          me.materials= [mateEDC]
+
+         me.transform(B.Mathutils.TranslationMatrix(B.Mathutils.Vector(0,0,.5)))
+         #me.transform(B.Mathutils.TranslationMatrix(B.Mathutils.Vector(0,0,.5)) * B.Mathutils.RotationMatrix(90, 4, 'y'))
          
          obn= "EEDC_%0.4d" % index
          ob= sc.objects.new(me, obn) # add a new mesh-type object to the scene
@@ -425,17 +449,17 @@ while True:
    dx= [h-l for h, l in zip(h_error, l_error)] #errorbox edge lengths
    tx= [(h-l)/2 + l for h, l in zip(h_error, l_error)] #errorbox centre
    
-   #icosphere for point position
+   # #icosphere for point position
 
-   subdivisions=1
-   diameter=point_size*min_error*options.s  #should be calculated as a percentage of the smallest error
-   mpoint= B.Mesh.Primitives.Icosphere(subdivisions, diameter)
-   mpoint.materials= [matp]
-   #http://www.blender.org/documentation/246PythonDoc/Object-module.html
-   obn= "point_%0.4d" % index
-   ob= sc.objects.new(mpoint, obn) # add a new mesh-type object to the scene
-   ob.setMatrix(ob.matrix.identity())#set identity to avoid double effect
-   ob.setLocation(pos[0], pos[1], pos[2])#transl obj only not the mesh
+   # subdivisions=1
+   # diameter=point_size*min_error*options.s  #should be calculated as a percentage of the smallest error
+   # mpoint= B.Mesh.Primitives.Icosphere(subdivisions, diameter)
+   # mpoint.materials= [matp]
+   # #http://www.blender.org/documentation/246PythonDoc/Object-module.html
+   # obn= "point_%0.4d" % index
+   # ob= sc.objects.new(mpoint, obn) # add a new mesh-type object to the scene
+   # ob.setMatrix(ob.matrix.identity())#set identity to avoid double effect
+   # ob.setLocation(pos[0], pos[1], pos[2])#transl obj only not the mesh
 
 
    #cube for errorbox
