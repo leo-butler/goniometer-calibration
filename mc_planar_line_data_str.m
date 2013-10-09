@@ -25,11 +25,18 @@ function plds = mc_planar_line_data_str (kappa,normal,focal_depths,focal_plane_n
   ## normal = 3 x 1 matrix of unit columns (=pi)
   ## focal_depth = focal depths (1 for each plane) (=lambda)
   ## focal_plane_normal = 3 x 1 normal to focal plane (=delta)
-  plds.z=focal_depths;
   plds.normal=normal;
   plds.focal_plane_normal=focal_plane_normal;
   plds.sigma=sigma;
-  plds.fd=fd=frame_data(kappa,normal,1,focal_plane_normal);
+  ## Degenerate case when the focal_plane_normal and normal coincide, and there is a 
+  ## single focal_depth. In this case, focal_depths should be a 2-element cell {kappa, v}.
+  if iscell(focal_depths)
+    plds.fd=fd=frame_data(kappa,normal,focal_depths,focal_plane_normal);
+    plds.z=focal_depths{1};
+  else
+    plds.z=focal_depths;
+    plds.fd=fd=frame_data(kappa,normal,1,focal_plane_normal);
+  endif
   for c=1:length(focal_depths)
     fd.focal_depth=focal_depths(c);
     [pldss,kappa,v,rho,plambda]=mc_planar_line_data_str_slice(fd,N,sigma);
@@ -43,16 +50,17 @@ function plds = mc_planar_line_data_str (kappa,normal,focal_depths,focal_plane_n
 endfunction
 %!test
 %! test "mc_planar_line_data_str_slice.m"
-%!shared sigma, N, epsilon, normal, focal_depth, focal_plane_normal
+%!shared sigma, N, epsilon, normal, focal_depth, focal_plane_normal, lineexp
 %!test
 %! N=2; sigma=0;
 %! kappa=1;
 %! normal=[0;1;0];
 %! focal_depths=[10;20];
 %! focal_plane_normal=[0;0;1];
+%! lineexp=@(z) [(N:-1:-N)',ones(2*N+1,1),z*ones(2*N+1,1)];
 %! pld=mc_planar_line_data_str(kappa,normal,focal_depths,focal_plane_normal,N,sigma);
-%! assert(norm((pld.lines){1}-[zeros(2*N+1,1),ones(2*N+1,1),10*ones(2*N+1,1)],2),0)
-%! assert(norm((pld.lines){2}-[zeros(2*N+1,1),ones(2*N+1,1),20*ones(2*N+1,1)],2),0)
+%! assert(norm((pld.lines){1}-lineexp(10),2),0)
+%! assert(norm((pld.lines){2}-lineexp(20),2),0)
 %!test
 %! N=2; sigma=1e-1;
 %! kappa=1;
@@ -60,7 +68,7 @@ endfunction
 %! focal_depths=[10;20];
 %! focal_plane_normal=[0;0;1];
 %! pld=mc_planar_line_data_str(kappa,normal,focal_depths,focal_plane_normal,N,sigma);
-%! assert(norm((pld.lines){1}-[zeros(2*N+1,1),ones(2*N+1,1),10*ones(2*N+1,1)],2),0,4*sigma)
-%! assert(norm((pld.lines){2}-[zeros(2*N+1,1),ones(2*N+1,1),20*ones(2*N+1,1)],2),0,4*sigma)
+%! assert(norm((pld.lines){1}-lineexp(10),2),0,4*sigma)
+%! assert(norm((pld.lines){2}-lineexp(20),2),0,4*sigma)
 
 #  end of mc_planar_line_data_str.m 
