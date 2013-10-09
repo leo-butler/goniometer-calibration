@@ -54,8 +54,8 @@ function [P,g] = estimate_plane_from_lines_closed_form \
   ## B is the covariance matrix, weighted by focal depths
   B=covariance(planar_line_data);
   ## the covariances computed above should be obtainable from B and the focal_plane_normal:
-  assert(norm(B*focal_plane_normal - cov_pld_fd,2),0,max_assert_error);
-  assert(norm(focal_plane_normal'*B*focal_plane_normal - cov_fd_fd,2),0,max_assert_error);
+  try_assert(norm(B*focal_plane_normal - cov_pld_fd,2),0,max_assert_error);
+  try_assert(norm(focal_plane_normal'*B*focal_plane_normal - cov_fd_fd,2),0,max_assert_error);
 
   ## compute "covariance" matrix C
   ## Cperp is the covariance restricted to the focal plane
@@ -63,7 +63,7 @@ function [P,g] = estimate_plane_from_lines_closed_form \
   focal_plane_projection=eye(3)-focal_plane_normal*focal_plane_normal';
   Cperp=focal_plane_projection*C*focal_plane_projection;
   ## C should already equal Cperp!
-  assert(norm(C-Cperp,2),0,max_assert_error);
+  try_assert(norm(C-Cperp,2),0,max_assert_error);
 
   ## compute the eigenvalues/vectors
   [q,alpha]=eig(Cperp);
@@ -72,7 +72,7 @@ function [P,g] = estimate_plane_from_lines_closed_form \
   ## v is the direction vector of the lsq line
   v=q(:,idx(1));
   w=vector_product(focal_plane_normal,v); w/=norm(w,2);
-  assert(abs(v'*focal_plane_normal),0,max_assert_error);
+  try_assert(abs(v'*focal_plane_normal),0,max_assert_error);
 
   ## cot(theta) where 0 <= theta < pi, so sin(theta) >= 0.
   cotheta= cov_pld_fd'*w/cov_fd_fd;
@@ -88,8 +88,8 @@ function [P,g] = estimate_plane_from_lines_closed_form \
 
   ## plane P
   kappa=p'*mean_planar_line_data;
-  assert(kappa-(-sintheta*w'*mean_planar_line_data + costheta*mean_focal_depth),0,max_assert_error);
-  assert(norm(mean_planar_line_data,2)^2 - kappa^2 - (mean_focal_depth-kappa*costheta)^2/sintheta^2>0,true);
+  try_assert(kappa-(-sintheta*w'*mean_planar_line_data + costheta*mean_focal_depth),0,max_assert_error);
+  try_assert(norm(mean_planar_line_data,2)^2 - kappa^2 - (mean_focal_depth-kappa*costheta)^2/sintheta^2>0,true);
 
   P=[p;kappa];
 endfunction
