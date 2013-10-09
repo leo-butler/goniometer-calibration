@@ -22,6 +22,10 @@ goniometer.dat
 *.tif
 *~
 mc_scratch.png
+figures
+*core*
+dir*
+*.dat
 ## temporary ignore
 .gnuplot
 data.gnuplot
@@ -36,3 +40,7 @@ plot_line.m
 rebase.m
 runtests.m
 scratch.m
+critpoly.m
+estimate_line_from_lines_hessian.m
+mapv.m
+mc_sim.m
