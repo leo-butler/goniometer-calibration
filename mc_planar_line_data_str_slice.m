@@ -30,8 +30,8 @@ function [pldss,kappa,v,rho,plambda] = mc_planar_line_data_str_slice (fd,N=10,si
   ## introduce drift in the line's direction
   fd=frame_data(fd,N,sigma);
   pld=sigma*randn(2,2*N+1) + [0;1]*(-N:N);
-  focal_plane_normal=fd.focal_plane_normal; rho=fd.rho; v=fd.v; plambda=fd.plambda; kappa=fd.kappa;
-  pldss=((eye(3)-focal_plane_normal*focal_plane_normal')*[rho,v]*pld+plambda)';
+  focal_plane_normal=fd.focal_plane_normal; w=fd.w; rho=fd.rho; v=fd.v; plambda=fd.plambda; kappa=fd.kappa;
+  pldss=((eye(3)-focal_plane_normal*focal_plane_normal')*[w,v]*pld+plambda)';
 endfunction
 %!shared sigma, N, epsilon, L, normal, focal_depth, focal_plane_normal, fd
 %!test
