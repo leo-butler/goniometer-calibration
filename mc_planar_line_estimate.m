@@ -39,7 +39,7 @@ endfunction
 %! estimate=mc_planar_line_estimate(planes,focal_depths,focal_plane_normal,N,sigma)
 %! Pexp=planes;
 %! P=estimate.estimate.P;
-%! assert(dptp(P(:,1),Pexp(:,1)) + dptp(P(:,2),Pexp(:,2)),0,1e-8)
+%! assert(dptp(P(:,1),Pexp(:,1)) + dptp(P(:,2),Pexp(:,2)),0,epsilon)
 %! lexp=[1;3;0;0;0;-1]; l=estimate.estimate.l;
 %! assert(norm(l-lexp,2),0,epsilon);
 %!test
