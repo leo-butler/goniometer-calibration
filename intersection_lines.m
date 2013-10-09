@@ -20,20 +20,28 @@
 ## along with this file. If not, see http://www.gnu.org/licenses/.
 ##
 
-function L = intersection_lines (P)
+function L = intersection_lines (P, choices=false, unoriented=true)
   ## usage:  L = intersection_lines (P)
   ##
   ## P= 4 x c matrix whose columns are planes
   ## L= 6 x C matrix of lines which are the pairwise intersection of the planes in P
   ## C is c choose 2
+  if unoriented
+    uol=@(L) unoriented_line(L);
+  else
+    uol=@(L) L;
+  endif
   c=columns(P);
-  choices=nchoosek(1:c,2); C=rows(choices);
+  if isscalar(choices)
+    choices=nchoosek(1:c,2);
+  endif
+  C=rows(choices);
   L=zeros(6,C);
   j=1;
   for i=choices'
     p=reshape(P(:,i(1,1)),4,1);
     q=reshape(P(:,i(2,1)),4,1);
-    L(:,j)=reshape(intersection_line(p,q)',6,1);
+    L(:,j)=uol(reshape(intersection_line(p,q)',6,1));
     j++;
   endfor
 endfunction
@@ -47,7 +55,7 @@ endfunction
 %!	 0,   0,   1;
 %!	 0,  -1,   0;
 %!	 1,   0,   0];
-%! L=intersection_lines(P);
+%! L=intersection_lines(P,false,false);
 %! assert(norm(L-Lexp,2),0,1e-16);
 
 #  end of intersection_lines.m 
