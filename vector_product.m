@@ -31,7 +31,8 @@ function v = vector_product (a,b)
   elseif rows(a)==3 && rows(b)==3
     v=[a(2,:).*b(3,:)-a(3,:).*b(2,:);-a(1,:).*b(3,:)+a(3,:).*b(1,:);a(1,:).*b(2,:)-a(2,:).*b(1,:)];
   else
-    error();
+    "a=",a,"b=",b
+    error("vector_product(a,b)");
   endif
 endfunction
 %!test
