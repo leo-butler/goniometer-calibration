@@ -1,3 +1,4 @@
+if draw_loaded=true then done else (load('draw), draw_loaded:true);
 s1 : make_random_state(4352345);
 set_random_state(s1);
 line(n) := block([p,v],
@@ -12,6 +13,7 @@ vector(l) := second(l);
 mean(lst) := apply("+",lst)/length(lst);
 norm(lst) := sqrt(lst.lst);
 c2f(x) := block([y], y:ev(float(expand(rectform(x))),numer), if y=x then return(x) else return(c2f(y)));
+discriminant(f,x) := resultant(f,diff(f,x),x);
 
 fom(l,L) := block([p,v,p0,v0],
   if l=false then return(l),
@@ -35,8 +37,104 @@ vec(l,d) := block([pbar,vbar,p,v,u,w,np],
 includeif(l,p) := block([L:[]], map(lambda([x],if p(x) then L:append(L,[x])),l), L);
 critpoly(d,a,b) := (1+d)^2*d^2 + 2*(1+d)*b - a*(1+d)^2 - b;
 s(d,a,b) := -d-(a-b/(1+d))/d;
+σ(d,a,b) := ratexpand(s(d,a,b)*d*(1+d));
 define(d2s(d,a,b),rat(diff(s(d,a,b),d,2)));
 d2s(d,a,b) := -(2*a*d^3+(-6*b+6*a)*d^2+(-6*b+6*a)*d-2*b+2*a)/(d^6+3*d^5+3*d^4+d^3);
+
+/*
+section differents, discriminants and resultants
+*/
+
+unorder();
+ordergreat(x,d,a,b);
+untellrat(d);
+tellrat(critpoly(d,a,b));
+define(τ(x,a,b),
+  collectterms(ratexpand(
+      charpoly(apply(matrix,
+          map(lambda([u],makelist(ratcoef(u,d,j),j,0,3)), makelist(collectterms(ratexpand(s(d,a,b)*d^i),d),i,0,3))),x)),x)),algebraic=true;
+disc_τ:factor(discriminant(τ(x,a,b),x));
+is(disc_τ=-256*b*(a-b)*(a^3-3*a^2+27*b*a+3*a-27*b^2-1)^3);
+disc_τ_f:(a-1)^3+27*b*(a-b);
+ratexpand(disc_τ+256*b*(a-b)*(disc_τ_f)^3);
+factor(discriminant(critpoly(x,a,b),x));
+ratexpand(%+16*b*(a-b)*disc_τ_f);
+define(p_root_disc_τ(a), [a,rhs(first(solve(disc_τ_f,b)))]);
+define(m_root_disc_τ(a), [a,rhs(second(solve(disc_τ_f,b)))]);
+root_disc_τ(b) := [((27*b^2-27*b)/2+27*b*(b+1)/2)^(1/3)
+-9*b/((27*b^2-27*b)/2+27*b*(b+1)/2)^(1/3)+1, b];
+untellrat(d);
+
+disc_τ_1:discriminant(diff(τ(x,a,b),x),x);
+resultant_τ:map(factor,[resultant(disc_τ,disc_τ_1,b),resultant(disc_τ,disc_τ_1,a)]);
+resultant_τ_fs:map(args,resultant_τ);
+
+/*
+end of section differents, discriminants and resultants
+*/
+
+/*
+section differents
+*/
+
+block([X:1,S:6,Y], Y:X*1.1,
+  draw(
+    terminal=wxt,
+    gr2d(
+      allocation=[[0,0],[1,1]],
+      user_preamble = "set style fill transparent solid 0.1 noborder",
+      fill_color=yellow,
+      region(b>=0 and b<=a,a,0,X,b,0,Y),
+      fill_color=green,
+      x_voxel=50,
+      y_voxel=50,
+      region(disc_τ_f>=0 and b>=0 and b<=a,a,0,X,b,0,Y),
+      xlabel="$a$",
+      ylabel="$b$",
+      grid=true,
+      xrange=[0,X],
+      yrange=[-0.1*Y,Y],
+      points_joined=true,
+      point_size=0,
+      points([[0,0],[X,X]]),
+      points([[0,0],[X,0]]),
+      color=black,
+      label(["$\\different{}^2<0$",0.61,0.35],
+        ["$\\different{}^2>0$",0.2,0.05],
+        ["$u=0$",0.4,0.1],
+        ["$b=a$",0.5,0.7],
+        ["$b=0$",0.5,-0.05],
+        ["* - triple roots",0.1,0.9],
+        ["\# - double-double roots",0.1,0.85],
+        ["*",1,1], ["*",1,0],
+        ["\#",0,0]
+        ),
+      points([[0.35,0.1],[0.25,0.125]]),
+      points([[0.5,0.65],[0.5,0.5]]),
+      points([[0.45,-0.05],[0.4,0.0]]),
+      color=red,
+      points(map(root_disc_τ,makelist(i/400,i,2,400*X))),
+      points(map(p_root_disc_τ,makelist(i/100+1/4,i,15,100*X))))
+    /*
+    ,
+    gr2d(
+      logy=true, logx=true,
+      xtics=false, ytics=false,
+      allocation=[[0.2,0.6],[0.3,0.3]],
+      xrange=1+[0,X]*S,
+      yrange=1+[-0.1*Y,Y]*S,
+      points_joined=true,
+      point_size=0,
+      color=blue,
+      points(1+[[0,0],[X,X]*S]),
+      points(1+[[0,0],[X,0]*S]),
+      color=red,
+      points(1+map(root_disc_τ,makelist(i/400,i,2,400*X*S))),
+      points(1+map(p_root_disc_τ,makelist(i/100+1/4,i,15,100*X*S))))
+    */
+    ));
+cairolatex(file) := system(printf(false,"sed -r -e \"s/set term.+/set terminal cairolatex pdf color linewidth 4; set output '~a';\"/ ~a/maxout.gnuplot | gnuplot",file,maxima_tempdir));
+cairolatex("different.ltx");
 
 kill(cproots);
 cproots[a,b]() := sort(map(rhs,allroots(critpoly(d,a,b))),'lambda([u,v],is(realpart(u)>=realpart(v))));
@@ -73,7 +171,6 @@ ml:mean_line([[[0,1,0],[1,0,0]], [[0,0,1],[0,1,0]], [[1,0,0],[0,0,1]]]);
 map(lambda([l],fom(l,L)),ml),numer;
 drts;
 
-if draw_loaded=true then done else (load('draw), draw_loaded:true);
 draw_contour(a,b,xmin,xmax,ymax) := block([c,r,g],
   c:(xmin+xmax)/2, r:(xmax-xmin)/2, g:lambda([t],c-r*exp(%pi*%i*t)),
   draw2d(
@@ -86,31 +183,47 @@ draw_contour(a,b,xmin,xmax,ymax) := block([c,r,g],
     yaxis=true));
 draw_c(a,b,ymax) := block([r],
   r:map(realpart,cproots[a,b]()), draw_contour(a,b,r[2],r[1],ymax));
-draw_s(a,b,xmax,ymax) :=
+
+draw_s(a,b,xmin,xmax,ymin,ymax) :=
 draw2d(
-  explicit(-d,d,-xmax,xmax),
-  explicit(s(d,a,b),d,-xmax,xmax),
-  yrange=[-ymax,ymax],
+  point_size=2, point_type=2,
+  points(map(realpart,map(lambda([x],subst(x,[d,s(d,a,b)])),allroots(critpoly(d,a,b))))),
+  grid=true,
+  explicit(-d,d,xmin,xmax),
+  explicit(s(d,a,b),d,xmin,xmax),
+  yrange=[ymin,ymax],
   terminal='wxt,
   xaxis=true,
   yaxis=true,
-  points_joined=true,
-  points([[-1,-ymax],[-1,ymax]]));
+  points_joined=true, point_size=0,
+  points([[-1,ymin],[-1,ymax]]),
+  points([[0,ymin],[0,ymax]]));
+draw_s(0.275,0.27, -2,1, -2,3);
+draw_s(0.275,0.26, -2,1, -2,3);
+
 bdisc(a) := map(rhs,allroots(27*b*(b-a)+(1-a)^3));
 discp(a,b) := block([p,dp,d],
   p:critpoly(d,a,b),dp:diff(p,d),factor(rat(resultant(p,dp,d))));
 plot_bdisc(amin,amax,n,[opts]) := block([a,b],
   a:makelist(amin+i*(amax-amin)/n,i,0,n),
   b:map(bdisc,a),
-  apply(draw3d,
-    append([terminal = 'wxt,
-      xlabel="a",ylabel="Re(b)",zlabel="Im(b)",
+  makelist([a[i],b[i][1],b[i][2]],i,1,n+1),
+  apply(gr3d,
+    append([
+      xlabel="$a$",ylabel="$Re(b)$",zlabel="$Im(b)$",
+      points_joined = true, point_size=0, color='red,
       points(makelist([a[i],realpart(b[i][1]),imagpart(b[i][1])],i,1,n+1)),
       points(makelist([a[i],realpart(b[i][2]),imagpart(b[i][2])],i,1,n+1)),
-      points_joined = true,
-      points([[amin,amin,0],[amax,amax,0]])],opts)),
-  makelist([a[i],b[i][1],b[i][2]],i,1,n+1));
-plot_bdisc(0.001,1.0,100,view=[0,0],label(["D<0",0.5,0.4,0],["D>0",0.2,0.15,0]),ztics=false);
+      color='blue,
+      points([[amin,amin,0],[amax,amax,0]])],opts)));
+v00:plot_bdisc(0.001,1.0,400,label(["$D<0$",0.5,0.4,0],["$D>0$",0.2,0.15,0],["$b=a$",0.2,0.6,0]),points([[0.25,0.6,0],[0.3,0.3,0]]),ztics=false,
+  view=[0,0],terminal='wxt)$
+draw(v00);
+v5520:plot_bdisc(0.001,1.0,400,label(["$D<0$",0.5,0.4,0],["$D>0$",0.2,0.15,0],["$b=a$",0.2,0.6,0]),points([[0.25,0.6,0],[0.3,0.3,0]]),ztics=false,
+  view=[55,20],terminal='wxt)$
+draw(v5520);
+system("sed -r -e \"s/set term.+/set terminal cairolatex pdf color linewidth 2; set output 'discrmin-55-20.ltx';\"/ /tmp/maxout.gnuplot | gnuplot");
+
 
 /* z<-1<y<=x<0<w */
 eqs:[x+y+z+w+2,1/x+1/y+1/z+1/w+2];
