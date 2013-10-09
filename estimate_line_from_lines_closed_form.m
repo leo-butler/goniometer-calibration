@@ -20,7 +20,7 @@
 ## along with this file. If not, see http://www.gnu.org/licenses/.
 ##
 
-function l = estimate_line_from_lines_closed_form (L)
+function [l,Lbar,d] = estimate_line_from_lines_closed_form (L)
 
   ## usage:  l = estimate_line_from_lines_closed_form (L)
   ##
@@ -28,13 +28,15 @@ function l = estimate_line_from_lines_closed_form (L)
   ## l = 6 x 1 least-squares best fit oriented line
   ## a line is a matrix [p;v] where p'*v=0, v'*v=1
   critpoly = @(a,b) [1,2,1-a,2*(b-a),b-a]; #[b-a, 2*b - 2*a, 1 - a, 2, 1];
-  delta = @(a,b) max(real(roots(critpoly(a,b))));
+  realorzero=@(x) real(x.*(abs(imag(x))<1e-9));
+  delta = @(a,b) max(realorzero(roots(critpoly(a,b))));
   Lbar = mean(L,2);
   pbar = Lbar(1:3,1);
   vbar = Lbar(4:6,1);
   if norm(pbar,2) < 1e-16
     v=vbar/norm(vbar,2);
     p=pbar;
+    d=NaN;
   else
     u = pbar/norm(pbar,2);
     w = vbar/norm(pbar,2)^2;
