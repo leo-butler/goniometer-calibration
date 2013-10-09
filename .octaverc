@@ -1,2 +1,9 @@
 # -*- mode:octave -*-
 warning ("off", "Octave:broadcast");
+output_precision(4);
+## see http://octave.1599824.n4.nabble.com/How-to-plot-using-gnuplot-WXT-terminal-type-td1626263.html
+if !strcmp(getenv("DISPLAY"),"")
+  setenv("GNUTERM","wxt");
+endif
+
+## end of .octaverc
