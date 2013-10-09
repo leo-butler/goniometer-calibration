@@ -20,14 +20,19 @@
 ## along with this file. If not, see http://www.gnu.org/licenses/.
 ##
 
-function [l,L,P,G] = estimator_closed_form (planar_line_data_str,focal_plane_normal,max_assert_error=1e-15,trans=1)
-  ## usage:  [L,P,G] = estimator_closed_form (planar_line_data_str,focal_plane_normal,max_assert_error=1e-15,trans=1)
+function [l,L,P,G,Lbar,d] = estimator_closed_form (planar_line_data_str,focal_plane_normal,max_assert_error=1e-15,trans=1,choices=false)
+  ## usage:  [l,L,P,G,Lbar,d] = estimator_closed_form (planar_line_data_str,focal_plane_normal,max_assert_error=1e-15,trans=1,choices=false)
   ##
   ## see estimate_plane_from_lines_closed_form.m
   ## trans = 1 => transpose data in planar_line_data_str
-  ## L = best fit line
+  ## choices = 2xN matrix of pairwise choices of the intersection planes P to use
+  ## to compute L; false -> use all
+  ## l = best fit line
+  ## L = intersection lines
   ## P = best fit planes
   ## G = best fit frames
+  ## Lbar = mean of L
+  ## d = max real root of critpoly (see thm 3.2)
   L=zeros(6,1);
   n=length(planar_line_data_str);
   P=zeros(4,n);
@@ -46,8 +51,8 @@ function [l,L,P,G] = estimator_closed_form (planar_line_data_str,focal_plane_nor
     P(:,i)=p;
     G(:,((3*i-2):(3*i)))=g;
   endfor
-  L=intersection_lines(P);
-  l=estimate_line_from_lines_closed_form(L);
+  L=intersection_lines(P,choices);
+  [l,Lbar,d]=estimate_line_from_lines_closed_form(L);
 endfunction
 %!shared epsilon, dist
 %!test
@@ -84,7 +89,7 @@ endfunction
 %! planar_line_data_str{3}.lines={[0,0,0;1,-1,0],[1,-1,1;2,-2,1]};  # plane x+y=0
 %! [l,L,P,G]=estimator_closed_form(planar_line_data_str,focal_plane_normal);
 %! lexp=[0;0;0;0;0;1]; # z-axis
-%! Lexp=[zeros(5,3);-1,1,1];
+%! Lexp=[zeros(5,3);1,1,1];
 %! Pexp=[1,0,0,0; 0,-1,0,0; 1/sqrt(2),1/sqrt(2),0,0]'; # y-z plane and x-z plane
 %! assert(dist(l,lexp),0,epsilon);
 %! assert(dist(L,Lexp),0,epsilon);
@@ -96,8 +101,8 @@ endfunction
 %! planar_line_data_str{2}.lines={[0,1,0;1,1,0],[1,1,1;1,1,1]};  #plane y=1
 %! planar_line_data_str{3}.lines={[0,0,0;1,1,0],[1,1,1;2,2,1]};  # plane x-y=0
 %! [l,L,P,G]=estimator_closed_form(planar_line_data_str,focal_plane_normal);
-%! lexp=[1;1;0;0;0;-1]; # z-axis
-%! Lexp=[ones(2,3);zeros(3,3);-1,-1,1];
+%! lexp=[1;1;0;0;0;1]; # z-axis
+%! Lexp=[ones(2,3);zeros(3,3);1,1,1];
 %! Pexp=[1,0,0,1; 0,-1,0,-1; 1/sqrt(2),-1/sqrt(2),0,0]'; # y-z plane and x-z plane
 %! assert(dist(l,lexp),0,epsilon);
 %! assert(dist(L,Lexp),0,epsilon);
@@ -109,8 +114,8 @@ endfunction
 %! planar_line_data_str{2}.lines=cellfun(@(z) [0,1,z;2,1,z], num2cell(0:5), 'UniformOutput', false);  #plane y=1
 %! planar_line_data_str{3}.lines=cellfun(@(z) [0,0,z;3,3,z], num2cell(0:5), 'UniformOutput', false);  # plane x-y=0
 %! [l,L,P,G]=estimator_closed_form(planar_line_data_str,focal_plane_normal);
-%! lexp=[1;1;0;0;0;-1]; # z-axis
-%! Lexp=[ones(2,3);zeros(3,3);-1,-1,1];
+%! lexp=[1;1;0;0;0;1]; # z-axis
+%! Lexp=[ones(2,3);zeros(3,3);1,1,1];
 %! Pexp=[1,0,0,1; 0,-1,0,-1; 1/sqrt(2),-1/sqrt(2),0,0]'; # y-z plane and x-z plane
 %! assert(dist(l,lexp),0,epsilon);
 %! assert(dist(L,Lexp),0,epsilon);
@@ -123,7 +128,7 @@ endfunction
 %! planar_line_data_str{2}.lines=cellfun(@(z) rndmat(@(z) [0,1,z;2,1,z],z), num2cell(0:5), 'UniformOutput', false);  #plane y=1
 %! planar_line_data_str{3}.lines=cellfun(@(z) rndmat(@(z) [0,0,z;3,3,z],z), num2cell(0:5), 'UniformOutput', false);  # plane x-y=0
 %! [l,L,P,G]=estimator_closed_form(planar_line_data_str,focal_plane_normal);
-%! lexp=[1;1;0;0;0;-1]; # z-axis
+%! lexp=[1;1;0;0;0;1]; # z-axis
 %! Lexp=[ones(2,3);zeros(3,3);-1,-1,1];
 %! Pexp=[1,0,0,1; 0,-1,0,-1; 1/sqrt(2),-1/sqrt(2),0,0]'; # y-z plane and x-z plane
 %! assert(dist(l(1:3),lexp(1:3)),0,epsilon);
@@ -144,8 +149,8 @@ endfunction
 %! planar_line_data_str{2}.lines=cellfun(@(z) rndmat(@(z) [0,1,z;2,1,z],z), num2cell(0:5), 'UniformOutput', false);  #plane y=1
 %! planar_line_data_str{3}.lines=cellfun(@(z) rndmat(@(z) [0,0,z;3,3,z],z), num2cell(1  ), 'UniformOutput', false);  # plane x-y=0
 %! [l,L,P,G]=estimator_closed_form(planar_line_data_str,focal_plane_normal)
-%! lexp=[1;1;0;0;0;-1]; # z-axis
-%! Lexp=[ones(2,3);zeros(3,3);-1,-1,1];
+%! lexp=[1;1;0;0;0;1]; # z-axis
+%! Lexp=[ones(2,3);zeros(3,3);1,1,1];
 %! Pexp=[1,0,0,1; 0,-1,0,-1; 1/sqrt(2),-1/sqrt(2),0,0]'; # y-z plane and x-z plane
 %! assert(dist(l(1:3),lexp(1:3)),0,epsilon);
 %! assert(dist(l(4:6),lexp(4:6)),0,epsilon);
