@@ -47,7 +47,7 @@ function fig = gc_plot_distance (gcdata,figre,normalize=false,yl=false,mean_posi
   if normalize
     xlabel("radius (\\% deviation from true)");
   else
-    xlabel("radius");
+    xlabel("${&varrho}$");
   endif
   if !yl
     [x,yl,buttons]=getposn("click at height");

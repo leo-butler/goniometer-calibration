@@ -19,13 +19,13 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this file. If not, see http://www.gnu.org/licenses/.
 ##
-function r = euler_coordinates (L)
+function r = euler_coordinates (L,degrees=false)
   x=zeros(3,3);
   x(:,1)=L(4:6);
   x(:,2)=L(1:3);
   s=norm(L(1:3),2);
   x(:,2)/=s;
   x(:,3)=vector_product(x(:,1),x(:,2));
-  r=[euler_angles(x);s];
+  r=[euler_angles(x,degrees);s];
 endfunction
 #  end of euler_coordinates.m 

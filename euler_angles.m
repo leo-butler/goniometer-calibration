@@ -21,11 +21,14 @@
 ##
 
 ## this gives the correct euler angles for cos(b)#0 or -%pi<2*b<%pi
-function [y,a,b,c] = euler_angles (x)
+function [y,a,b,c] = euler_angles (x,degrees=false)
   a=atan2( x(2,1),x(1,1) );
   b=atan2( -x(3,1),sqrt(x(3,2)^2+x(3,3)^2) );
   c=atan2( x(3,2),x(3,3) );
   y=[a;b;c];
+  if degrees
+    y=y*180/pi;
+  endif
 endfunction
 ## for tests, see euler_matrix.m
 

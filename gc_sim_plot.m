@@ -31,9 +31,9 @@ function fig = gc_sim_plot (gcdata,dx_dy_scale=[2,3],conf_scale=1.7)
   text=@(x) 0;
 
   ## convert data
-  sc=to_spherical_coordinates(gcdata.lest(4:6,:));
-  msc=to_spherical_coordinates(gcdata.mean(4:6));
-  estsc=to_spherical_coordinates(gcdata.estimate.l(4:6));
+  sc=to_spherical_coordinates(gcdata.lest(4:6,:),true);
+  msc=to_spherical_coordinates(gcdata.mean(4:6),true);
+  estsc=to_spherical_coordinates(gcdata.estimate.l(4:6),true);
   [covsc,eigsc]=eig(cov(sc'));
   csc(1)=sqrt(eigsc(1,1)); csc(2)=sqrt(eigsc(2,2));
   dx=dx_dy_scale(1)*csc(1); dy=dx_dy_scale(2)*csc(2);

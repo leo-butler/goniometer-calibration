@@ -19,11 +19,14 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this file. If not, see http://www.gnu.org/licenses/.
 ##
-function y = to_spherical_coordinates (x)
+function y = to_spherical_coordinates (x,degrees=false)
   y=zeros(2,columns(x));
   # polar angle
   y(2,:)=acos(x(3,:));
   # azimuthal angle
   y(1,:)=atan2(x(2,:),x(1,:));
+  if degrees
+    y=y*180/pi;
+  endif
 endfunction
 #  end of to_spherical_coordinates.m 

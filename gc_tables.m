@@ -21,11 +21,25 @@
 ##
 1;
 
+
+function y = radians2degrees (x)
+  y = x*180/pi;
+endfunction
+
+for i=1:length(gc5)
+  gc5{i}.euler_coordinates_angles(1:3,:)=radians2degrees(gc5{i}.euler_coordinates(1:3,:));
+  gc5{i}.euler_coordinates_angles(4,:)=gc5{i}.euler_coordinates(4,:);
+endfor
+for i=1:length(mc)
+  mc{i}.euler_coordinates_angles(1:3,:)=radians2degrees(mc{i}.euler_coordinates(1:3,:));
+  mc{i}.euler_coordinates_angles(4,:)=mc{i}.euler_coordinates(4,:);
+endfor
+
 function s = printflt (x,p=4)
   if abs(x)<10.0 && abs(x)>1.0
     s=sprintf(sprintf("%%.%gf",p),x);
   else
-    s=sprintf("%s",regexprep(sprintf(sprintf("%%.%ge",p),x),'e[+]?(-)?0?([0-9]+)',' \times 10^{$1$2}'));
+    s=sprintf("%s",regexprep(sprintf(sprintf("%%.%ge",p),x),'e[+]?(-)?0?([0-9]+)',' \ttime{10^{$1$2}}'));
   endif
 endfunction
 
@@ -54,15 +68,15 @@ print_cell_array(map(@(x) printflt(x), gc5{1}.estimate.l,'UniformOutput',false))
 print_cell_array(gc5{1}.estimate.l,@(x,y) sprintf("%s%s",printflt(x),y))
 
 print_cell_array(gc5,@(gc) print_cell_array(gc.estimate.l,@(x,y) sprintf("%s%s",printflt(x),y),' & '," \\\\\n"))
-print_cell_array(gc5,@(gc) print_cell_array(euler_coordinates(gc.estimate.l),@(x,y) sprintf("%s%s",printflt(x),y),' & '," \\\\\n"))
+print_cell_array(gc5,@(gc) print_cell_array(euler_coordinates(gc.estimate.l,true),@(x,y) sprintf("%s%s",printflt(x),y),' & '," \\\\\n"))
 
 print_cell_array(mc,@(gc) print_cell_array(gc.estimate.l,@(x,y) sprintf("%s%s",printflt(x),y),' & '," \\\\\n"))
-print_cell_array(mc,@(gc) print_cell_array(euler_coordinates(gc.estimate.l),@(x,y) sprintf("%s%s",printflt(x),y),' & '," \\\\\n"))
+print_cell_array(mc,@(gc) print_cell_array(euler_coordinates(gc.estimate.l,true),@(x,y) sprintf("%s%s",printflt(x),y),' & '," \\\\\n"))
 
 print_cell_array(mat2fullcell(mc{1}.cov), @(a,b) sprintf("%s%s",printflt(a),b))
-print_cell_array(mat2fullcell(cov(mc{1}.euler_coordinates')), @(a,b) sprintf("%s%s",printflt(a,2),b))
+print_cell_array(mat2fullcell(cov(mc{1}.euler_coordinates_angles')), @(a,b) sprintf("%s%s",printflt(a,0),b))
 
-cellfun(@(gc) print_cell_array(mat2fullcell(cov(gc.euler_coordinates')), @(a,b) sprintf("%s%s",printflt(a,2),b)), gc5,'UniformOutput', false)
+cellfun(@(gc) print_cell_array(mat2fullcell(cov(gc.euler_coordinates_angles')), @(a,b) sprintf("%s%s",printflt(a,2),b)), gc5,'UniformOutput', false)
 
 
 function s = printdiag (x,printer,inter='&',ender="\\\\\n")
@@ -86,12 +100,12 @@ function s = printmat (x,printer,sym=1,inter='&',ender="\\\\\n")
     s=strcat(s, printer(x(i,r)), ender);  
   endfor
 endfunction
-[u,v]=eig(cov(mc{1}.euler_coordinates'));
+[u,v]=eig(cov(mc{1}.euler_coordinates_angles'));
 v=sqrt(v);
 printdiag(v,@(x) printflt(x+0,1))
 printmat(round(100*u')/100,@(x) sprintf("%.1f",x+0),0)
 for i=1:length(gc5)
-  [u,v]=eig(cov(gc5{i}.euler_coordinates'));
+  [u,v]=eig(cov(gc5{i}.euler_coordinates_angles'));
   v=sqrt(v);
   printdiag(v,@(x) printflt(x+0,1))
   printmat(round(100*u')/100,@(x) sprintf("%.1f",x+0),0)

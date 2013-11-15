@@ -32,6 +32,7 @@ function printplot (filename,pdflatex=false,directory="figures")
     cairolatex(sprintf("%s/%s-cltx.ltx",directory,filename));
   else
     print("-depslatex","-tight",sprintf("%s/%s.tex",directory,filename));
+    print("-dsvg","-tight",sprintf("%s/%s.svg",directory,filename));
   endif
 endfunction
 
@@ -39,15 +40,16 @@ endfunction
 clf("reset");
 cellfun(@(x) gc_sim_plot(x,[3,5],0),gc5,'UniformOutput',false);
 hold on;
-text(1.754,pi/2+0.0025,"P");				#pooled data
-text(1.752,pi-1.585,"C");				#dir+ data - clockwise
-text(pi-1.393,pi/2+0.015,"A");				#dir- data - anti-clockwise
+C=180/pi;
+text(1.754*C,(pi/2+0.0025)*C,"P");	#pooled data
+text(1.756*C,(pi-1.585)*C,"C");		#dir+ data - clockwise
+text((pi-1.393)*C,(pi/2+0.015)*C,"A");	#dir- data - anti-clockwise
 set(gca,"fontsize",5);
 set(gca,
-    "xtick",1.750+1e-3*(0:2:6),"xticklabel",{'0', '2', '4', '6'},
-    "xlabel","${&alpha (&times 10^{-3}) + 1.750}$",	#azimuthal angle
-    "ytick",pi/2+1e-2*((-2):1:2),"yticklabel",{'-2', '-1', '0', '1'},
-    "ylabel","$&pi/2 + {&beta (&times 10^{-2})}$"	#polar angle
+    "xtick",C*(1.748+1e-3*(0:4:8)),"xticklabel",{'2', '4', '6'},
+    "xlabel","${10(&alpha-100)}$",	#azimuthal angle
+    "ytick",88:1:91,"yticklabel",{'-2', '-1', '0', '1'},
+    "ylabel","${&beta} - 90$"		#polar angle
     );
 hold off;
 printplot("direction-vector-dist-pooled");
@@ -68,7 +70,7 @@ text(-400,1000,85020,"pooled data");
 hold off;
 printplot("point-dist-pooled");
 
-if false
+if true
   mc=mc_show_sim(3000,300);
   for i=1:length(gc5)
     gc5{i}.euler_coordinates=mapv(@euler_coordinates, gc5{i}.lest, 4);
@@ -90,23 +92,23 @@ printplot("mc_sim_points");
 
 fig=clf("reset");
 hold on;
-cellfun(@(gcdata) gc_sim_plot_euler(gcdata,fig,false),gc5,'UniformOutput',false);
+cellfun(@(gcdata) gc_sim_plot_euler(gcdata,fig,false,false,true),gc5,'UniformOutput',false);
 #view(275,90-50);
 set(gca,"fontsize",5);
 set(gca,
-    "xtick",1.750+1e-3*(0:2:8),"xticklabel",{'0', '2', '4', '6', '8'},
-    "xlabel","${&alpha (&times 10^{-3}) + 1.750}$",
-    "ytick",1e-2*((-2):1:1),"yticklabel",{'-2', '-1', '0', '1'},
-    "ylabel","${&beta (&times 10^{-2})}$",
-    "ztick",1.5640+1e-4*(-6:4:6),"zticklabel",{'-6', '-2', '2', '6'},
-    "zlabel","${&gamma (&times 10^{-4}) + 1.5640}$"
+    "xtick",100+1e-1*(1:2:7),"xticklabel",{'1', '3', '5', '7'},
+    "xlabel","$10({&alpha}-100)$",	#azimuthal angle
+    "ytick",-1:0.5:0.5,
+    "ylabel","${&beta}$",
+    "ztick",89.5+1e-2*(2:2:8),"zticklabel",{'2', '4', '6', '8'},
+    "zlabel","$100({&gamma}-89.5)$"
     );
 axis("square");
 view(65,90-35)
 lbl={"anti-clockwise","clockwise","pooled-a","pooled-b"};
 for l=1:length(gc5)
   gc5{l}.label=lbl{l};
-  p=euler_coordinates(gc5{l}.estimate.l)+4e-3*[1;0;0;0];
+  p=euler_coordinates(gc5{l}.estimate.l,true)+C*4e-3*[1;0;0;0];
   text(p(1),p(2),p(3),gc5{l}.label);
 endfor
 hold off;
@@ -121,15 +123,15 @@ printplot("mc-euler-angle-dist4");
 
 fig=clf("reset");
 hold on;
-gc_sim_plot_euler(mc{1},fig,false,true);
+gc_sim_plot_euler(mc{1},fig,false,true,true);
 cellfun(@(x) set(x,"fontsize",5),num2cell(get(fig,"children")),'UniformOutput',false)
 set(gca,
-    "xtick",1e-3*((-2):1:2),"xticklabel",{'-2', '-1', '0', '1', '2'},
-    "xlabel","${&alpha (&times 10^{-3})}$",
-    "ytick",1e-3*((-2):1:2),"yticklabel",{'-2', '-1', '0', '1', '2'},
-    "ylabel","${&beta (&times 10^{-3})}$",
-    "ztick",1e-4*((-2):1:2),"zticklabel",{'-2', '-1', '0', '1', '2'},
-    "zlabel","${&gamma (&times 10^{-4})}$"
+    "xtick",1e-1*((-2):1:2),"xticklabel",{'-2', '-1', '0', '1', '2'},
+    "xlabel","$10({&alpha}-90)$",
+    "ytick",1e-1*((-2):1:2),"yticklabel",{'-2', '-1', '0', '1', '2'},
+    "ylabel","$10{&beta}$",
+    "ztick",5e-3*((-1):1:2),"zticklabel",{      '-1', '0', '1', '2'},
+    "zlabel","$200({&gamma}-90)$"
     );
 axis("square");
 view(65,90-35)
@@ -160,7 +162,7 @@ fig=clf("reset");
 subplot(2,1,1);
 gc_plot_distance(gc5{2},fig,true,0.15,[-0.005 0.14]);
 subplot(2,1,2);
-gc_plot_distance(gc5{2},fig,false,0.15,[85045 0.14]);
+gc_plot_distance(gc5{2},fig,false,0.15,[85055 0.14]);
 printplot("gc52-radius");
 
 fig=clf("reset");
@@ -173,10 +175,10 @@ printplot("gc53-radius");
 
 fig=clf("reset");
 hold on;
-subplot(2,2,1);gc_plot_distance(gc5{1},fig,false,0.15,[85035 0.14]);title("anti-clockwise");
+subplot(2,2,1);gc_plot_distance(gc5{1},fig,false,0.15,[85036 0.14]);title("anti-clockwise");
 subplot(2,2,2);gc_plot_distance(gc5{2},fig,false,0.15,[85050 0.14]);title("clockwise");
 subplot(2,2,3);gc_plot_distance(gc5{3},fig,false,0.13,[85042 0.125]);title("pooled-a");
-subplot(2,2,4);gc_plot_distance(gc5{4},fig,false,0.15,[85050 0.125]);title("pooled-b");
+subplot(2,2,4);gc_plot_distance(gc5{4},fig,false,0.15,[85058 0.125]);title("pooled-b");
 hold off;
 printplot("gc-radius");
 

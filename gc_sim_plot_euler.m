@@ -20,7 +20,7 @@
 ## along with this file. If not, see http://www.gnu.org/licenses/.
 ##
 
-function fig = gc_sim_plot_euler (gcdata,f=0,with_projections=true,demean=false)
+function fig = gc_sim_plot_euler (gcdata,f=0,with_projections=true,demean=false,degrees=false)
   ## get figure
   if !isfigure(f)
     fig=figure();
@@ -29,14 +29,16 @@ function fig = gc_sim_plot_euler (gcdata,f=0,with_projections=true,demean=false)
   endif
 
   ## compute Euler angles and radii
-  if isfield(gcdata,"euler_coordinates")
+  if isfield(gcdata,"euler_coordinates") && !degrees
     ec=gcdata.euler_coordinates;
+  elseif isfield(gcdata,"euler_coordinates_angles") && degrees
+    ec=gcdata.euler_coordinates_angles;
   else
-    ec=mapv(@euler_coordinates,gcdata.lest,4);
+    ec=mapv(@(x) euler_coordinates(x,degrees),gcdata.lest,4);
   endif
   angles=mapv(@(x) x(1:3),ec,3);
-  mec=euler_coordinates(gcdata.mean);
-  estec=euler_coordinates(gcdata.estimate.l);
+  mec=euler_coordinates(gcdata.mean,degrees);
+  estec=euler_coordinates(gcdata.estimate.l,degrees);
   if demean
     angles=mapv(@(x) x(1:3)-mec(1:3),ec,3);
     estec-=mec;
