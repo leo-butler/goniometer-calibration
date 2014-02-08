@@ -2,7 +2,7 @@
 ##
 ## $Id: emacs-octave.el,v 1.3 2010-05-28 16:50:15 lbutler Exp $
 ##
-## Author: Leo Butler (l.butler@ed.ac.uk)
+## Author: Leo Butler (l.butler@cmich.edu)
 ##
 ## This file is OCTAVE code (http://www.octave.org/)
 ##

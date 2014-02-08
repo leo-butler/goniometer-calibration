@@ -2,7 +2,7 @@
 #
 # $Id$
 #
-# Author: Leo Butler (l.butler@ed.ac.uk)
+# Author: Leo Butler (l.butler@cmich.edu)
 #
 # This file is OCTAVE code (http://www.octave.org/)
 #
