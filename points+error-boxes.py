@@ -405,8 +405,9 @@ while True:
          #rmat= B.Mathutils.RotationMatrix(90, 4, 'y') ##rot in deg not rad!!! 90/180*math.pi
          #rmat= B.Mathutils.RotationMatrix(90, 4, 'y').invert() * rrmat
          #rmat= rrmat * B.Mathutils.RotationMatrix(-90, 4, 'y')
+         rmat= B.Mathutils.RotationMatrix(90, 4, 'y') * B.Mathutils.RotationMatrix(90, 4, 'x') * rrmat #this transforms the rotation matrix such that a direction-vector pointing in global z-direction is not changed for the Euler-angles alpha= 0, beta= 0, gamma= 0
          #rmat= rrmat + B.Mathutils.RotationMatrix(90, 4, 'y')##strangly this works...
-         rmat= rrmat ##doing local rot manually in blender
+         #rmat= rrmat ##doing local rot manually in blender
          xmat= B.Mathutils.ScaleMatrix(ab[0],4,B.Mathutils.Vector(1,0,0))
          ymat= B.Mathutils.ScaleMatrix(ab[1],4,B.Mathutils.Vector(0,1,0))
          zmat= B.Mathutils.Matrix().identity()
