@@ -396,26 +396,25 @@ while True:
          rot= [x for x in dl[3:12]]##do not scale!!!
          pos= [x*options.s for x in dl[12:15]]
          print "scale a,b:", ab
-         #print rot[0:3]
 
-         #rrmat= B.Mathutils.Matrix([rot[0], rot[1], rot[2], 0], [rot[3], rot[4], rot[5], 0], [rot[6], rot[7], rot[8], 0], [0,0,0,1])         
          rrmat= B.Mathutils.Matrix([rot[0], rot[1], rot[2]], [rot[3], rot[4], rot[5]], [rot[6], rot[7], rot[8]])         
          rrmat.resize4x4()
 
-         #rmat= B.Mathutils.RotationMatrix(90, 4, 'y') ##rot in deg not rad!!! 90/180*math.pi
-         #rmat= B.Mathutils.RotationMatrix(90, 4, 'y').invert() * rrmat
-         #rmat= rrmat * B.Mathutils.RotationMatrix(-90, 4, 'y')
+         ## transformation for the eEDC need special care:
+         ## the octave code interprets the Euler-angles such that the initial orientation direction points in x-direction and that the first Euler-angle alpha rotates in the xy-plane towards the y-axis
+         ## Blender's unit-cone points in z-direction
+         ## So either transform the unit-cone to point in x-direction such that the Euler-angle alpha rotates within the global xy-plane towards the global y-axis (corresponding to the interpretation in the octave code, avoiding the need to adjust the rotation matrix); this is now the DEFAULT in this blender code!
+         ## Or transform the rotation matrix, scale cone in xy-plane (not in yz-plane), and remove me.transform in x- and y-direction
+
          #rmat= B.Mathutils.RotationMatrix(90, 4, 'y') * B.Mathutils.RotationMatrix(90, 4, 'x') * rrmat #this transforms the rotation matrix such that a direction-vector pointing in global z-direction is not changed for the Euler-angles alpha= 0, beta= 0, gamma= 0
-         #rmat= rrmat + B.Mathutils.RotationMatrix(90, 4, 'y')##strangly this works...
          rmat= rrmat #take rotation matrix as is, therefore create unit-cone that correctly (local-y pointing in global-y) points in x-direction; this then corresponds to the Euler-angle interpretation used in the octave code
+         xmat= B.Mathutils.Matrix().identity()
          ymat= B.Mathutils.ScaleMatrix(ab[0],4,B.Mathutils.Vector(0,1,0)) #scaling has to be done in yz-plane if unit-cone points in x-direction
          zmat= B.Mathutils.ScaleMatrix(ab[1],4,B.Mathutils.Vector(0,0,1)) #scaling has to be done in yz-plane if unit-cone points in x-direction
-         xmat= B.Mathutils.Matrix().identity()
          
          print "scale part of the rotation matrix:", rmat.scalePart()
 
          tmat= (xmat*ymat*zmat)*rmat
-         #tmat= (xmat*ymat*zmat)
 
          ##Cone points in z, centre @ hight/2 
          me= B.Mesh.Primitives.Cone(32, 1.0, 1.0) ##segments, radius, height
@@ -428,8 +427,6 @@ while True:
          ob= sc.objects.new(me, obn) # add a new mesh-type object to the scene
 
          ob.setMatrix(tmat)
-         #ob.setMatrix(tmat.invert()*B.Mathutils.RotationMatrix(90, 4, 'y')*tmat)
-         #ob.setMatrix(tmat.rotationPart().invert()*B.Mathutils.RotationMatrix(90, 3, 'y')*tmat.rotationPart())
          ob.setLocation(pos[0], pos[1], pos[2])#transl obj only not the mesh
          ob.drawMode |= B.Object.DrawModes.TRANSP
       continue 
