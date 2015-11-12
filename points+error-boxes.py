@@ -405,12 +405,12 @@ while True:
          #rmat= B.Mathutils.RotationMatrix(90, 4, 'y') ##rot in deg not rad!!! 90/180*math.pi
          #rmat= B.Mathutils.RotationMatrix(90, 4, 'y').invert() * rrmat
          #rmat= rrmat * B.Mathutils.RotationMatrix(-90, 4, 'y')
-         rmat= B.Mathutils.RotationMatrix(90, 4, 'y') * B.Mathutils.RotationMatrix(90, 4, 'x') * rrmat #this transforms the rotation matrix such that a direction-vector pointing in global z-direction is not changed for the Euler-angles alpha= 0, beta= 0, gamma= 0
+         #rmat= B.Mathutils.RotationMatrix(90, 4, 'y') * B.Mathutils.RotationMatrix(90, 4, 'x') * rrmat #this transforms the rotation matrix such that a direction-vector pointing in global z-direction is not changed for the Euler-angles alpha= 0, beta= 0, gamma= 0
          #rmat= rrmat + B.Mathutils.RotationMatrix(90, 4, 'y')##strangly this works...
-         #rmat= rrmat ##doing local rot manually in blender
-         xmat= B.Mathutils.ScaleMatrix(ab[0],4,B.Mathutils.Vector(1,0,0))
-         ymat= B.Mathutils.ScaleMatrix(ab[1],4,B.Mathutils.Vector(0,1,0))
-         zmat= B.Mathutils.Matrix().identity()
+         rmat= rrmat #take rotation matrix as is, therefore create unit-cone that correctly (local-y pointing in global-y) points in x-direction; this then corresponds to the Euler-angle interpretation used in the octave code
+         ymat= B.Mathutils.ScaleMatrix(ab[0],4,B.Mathutils.Vector(0,1,0)) #scaling has to be done in yz-plane if unit-cone points in x-direction
+         zmat= B.Mathutils.ScaleMatrix(ab[1],4,B.Mathutils.Vector(0,0,1)) #scaling has to be done in yz-plane if unit-cone points in x-direction
+         xmat= B.Mathutils.Matrix().identity()
          
          print "scale part of the rotation matrix:", rmat.scalePart()
 
@@ -422,7 +422,7 @@ while True:
          me.materials= [mateEDC]
 
          me.transform(B.Mathutils.TranslationMatrix(B.Mathutils.Vector(0,0,.5)))
-         #me.transform(B.Mathutils.TranslationMatrix(B.Mathutils.Vector(0,0,.5)) * B.Mathutils.RotationMatrix(90, 4, 'y'))
+         me.transform(B.Mathutils.RotationMatrix(90, 4, 'y') * B.Mathutils.RotationMatrix(90, 4, 'x')) #this transforms the unit-cone to point in x-direction such that the Euler-angle alpha rotates within the global xy-plane towards the global y-axis
          
          obn= "EEDC_%0.4d" % index
          ob= sc.objects.new(me, obn) # add a new mesh-type object to the scene
