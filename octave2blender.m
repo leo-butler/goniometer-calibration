@@ -1,9 +1,9 @@
 
-### call
-# octave ~/publications/rot_axis_eval/blender_vis/octave2blender_01.m ~/publications/rot_axis_eval/rep_svn_121119/goniometer-calibration/data/mc+gc5.dat 
+#### call
+## octave octave2blender.m data/mc+gc5.dat 
 
-#02: export data for error-ellipsoid (error in p)
-#todo: calc pos and scale factor for the planes
+##02: export data for error-ellipsoid (error in p)
+##todo: calc pos and scale factor for the planes
 
 out_fn="pool_estimate";
 
@@ -84,7 +84,6 @@ fprintf(fid, "#iline\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n", i, gc5{i}.estimate.l(4:6), 
 pcov=gc5{i}.cov(1:3,1:3); ##same as cov(gc5{i}.lest(1:3,:)')
 [u,w]=eig(pcov);
 u= u * diag([sign(det(u)),1,1]); ##make u right-handed 
-#diag(sqrt(w))
 ##print a, b, c, rot-mat, transl vector
 fprintf(fid, "##eell:\ti\ta\tb\tc\tr11\tr12\tr13\tr21\tr22\tr23\tr31\tr32\tr33\td1\td2\td3\n");
 #fprintf(fid, "#eell\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n", i, diag(sqrt(w)), reshape(u,1,9), gc5{i}.estimate.l(1:3));

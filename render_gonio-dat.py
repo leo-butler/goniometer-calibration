@@ -1,4 +1,12 @@
-##script to plot points and their errorboxes in blender
+## blender script to render the goniometer estimator data, and the input points and their errorboxes
+
+# first run octave with goniometer estimator result data
+# octave octave2blender.m data/mc+gc5.dat 
+# then blender < 2.50 for each generated *.bdat
+# for i in *.bdat ; do 
+# blender-2.49b-linux-glibc236-py26-x86_64/blender -b blender_vis/points_cam01.blend -P  render_gonio-dat.py  -- -i $i -o ${i%.bdat}_00.blend  -r 0 -g .7  -b .9 -s .001
+# done
+
 #added colour option
 #drawing a plane from #plane line
 #added scaling factor to shrink values to fit in blender scene
@@ -9,6 +17,7 @@
 #08: added plotting of estimated iline
 #09: added plotting of error-ellipsoid (error in p) and the elliptic error cone (EDC) (error in v)
 #10: added double cone plotting and ilineC
+
 
 import math
 import sys,os,getopt
@@ -78,55 +87,55 @@ scn= bpy.data.scenes.active
 
 ##material for the point
 matp = B.Material.New('p_mat')         
-matp.rgbCol = [options.r, options.g, options.b]          # change its color
-matp.setAlpha(1.0)                     # mat.alpha = 0.2 -- almost transparent
-matp.emit = 0.2                        # equivalent to mat.setEmit(0.8)
-#matp.mode |= B.Material.Modes.VCOL_PAINT # turn on vertex colouring
-matp.mode |= B.Material.Modes.ZTRANSP    # turn on Z-Buffer transparency
+matp.rgbCol = [options.r, options.g, options.b]
+matp.setAlpha(1.0)
+matp.emit = 0.2
+#matp.mode |= B.Material.Modes.VCOL_PAINT
+matp.mode |= B.Material.Modes.ZTRANSP
 
 ##material for the error box
 matb = B.Material.New('p_mat')         
-matb.rgbCol = [options.r, options.g, options.b]          # change its color
-matb.setAlpha(0.5)                     # mat.alpha = 0.2 -- almost transparent
-matb.emit = 0.2                        # equivalent to mat.setEmit(0.8)
-#matb.mode |= B.Material.Modes.VCOL_PAINT # turn on vertex colouring
-matb.mode |= B.Material.Modes.ZTRANSP    # turn on Z-Buffer transparency
+matb.rgbCol = [options.r, options.g, options.b]
+matb.setAlpha(0.5)
+matb.emit = 0.2
+#matb.mode |= B.Material.Modes.VCOL_PAINT
+matb.mode |= B.Material.Modes.ZTRANSP
 
 ##material for the fitted plane
 matplane = B.Material.New('plane_mat')         
-#matplane.rgbCol = [options.r, options.g, options.b]          # change its color
-matplane.rgbCol = [0, 0, 1]          # change its color
-matplane.setAlpha(.5)                     # mat.alpha = 0.2 -- almost transparent
-matplane.emit = 0.8                        # equivalent to mat.setEmit(0.8)
-#matb.mode |= B.Material.Modes.VCOL_PAINT # turn on vertex colouring
-matplane.mode |= B.Material.Modes.ZTRANSP    # turn on Z-Buffer transparency
+#matplane.rgbCol = [options.r, options.g, options.b]
+matplane.rgbCol = [0, 0, 1]
+matplane.setAlpha(.5)
+matplane.emit = 0.8
+#matb.mode |= B.Material.Modes.VCOL_PAINT
+matplane.mode |= B.Material.Modes.ZTRANSP
 
 ##material for the fitted iline
-mati= B.Material.New('iline_mat')       # normals and inside faces
-mati.rgbCol = [0, 0, 0]          # change its color
-mati.setAlpha(0.5)                     # mat.alpha = 0.2 -- almost transparent
-mati.emit = 0.6                        # equivalent to mat.setEmit(0.8)
+mati= B.Material.New('iline_mat')
+mati.rgbCol = [0, 0, 0]
+mati.setAlpha(0.5)
+mati.emit = 0.6
 mati.spec = 0
-mati.mode |= B.Material.Modes.WIRE # turn on vertex colouring
-mati.mode |= B.Material.Modes.ZTRANSP    # turn on Z-Buffer transparency
+mati.mode |= B.Material.Modes.WIRE
+mati.mode |= B.Material.Modes.ZTRANSP
 
 ##material for the error ellipsoid
 mateell = B.Material.New('eell_mat')         
-#matplane.rgbCol = [options.r, options.g, options.b]          # change its color
-mateell.rgbCol = [1, 0, 0]          # change its color
-mateell.setAlpha(.5)                     # mat.alpha = 0.2 -- almost transparent
-mateell.emit = 0.8                        # equivalent to mat.setEmit(0.8)
-#matb.mode |= B.Material.Modes.VCOL_PAINT # turn on vertex colouring
-mateell.mode |= B.Material.Modes.ZTRANSP    # turn on Z-Buffer transparency
+#matplane.rgbCol = [options.r, options.g, options.b]
+mateell.rgbCol = [1, 0, 0]
+mateell.setAlpha(.5)
+mateell.emit = 0.8
+#matb.mode |= B.Material.Modes.VCOL_PAINT
+mateell.mode |= B.Material.Modes.ZTRANSP
 
 ##material for the error EDC
 mateEDC = B.Material.New('eell_mat')         
-#matplane.rgbCol = [options.r, options.g, options.b]          # change its color
-mateEDC.rgbCol = [1, 1, 0]          # change its color
-mateEDC.setAlpha(.5)                     # mat.alpha = 0.2 -- almost transparent
-mateEDC.emit = 0.8                        # equivalent to mat.setEmit(0.8)
-#matb.mode |= B.Material.Modes.VCOL_PAINT # turn on vertex colouring
-mateEDC.mode |= B.Material.Modes.ZTRANSP    # turn on Z-Buffer transparency
+#matplane.rgbCol = [options.r, options.g, options.b]
+mateEDC.rgbCol = [1, 1, 0]
+mateEDC.setAlpha(.5)
+mateEDC.emit = 0.8
+#matb.mode |= B.Material.Modes.VCOL_PAINT
+mateEDC.mode |= B.Material.Modes.ZTRANSP
 
 
 w= B.World.Get('World') #assume there exists a world named "world"
@@ -150,8 +159,6 @@ while True:
    if not in_line:
       break
 
-   #print ".",
-   #sys.stdout.write(".")
    print "\r[%3d%%]" % (j*100.0/ln),
    sys.stdout.flush()
 
@@ -164,9 +171,6 @@ while True:
    line= in_line.split() #split at white space
    if line:
       dl = map(float, line)
-   # for i in range(0, len(sl)):
-   #     dl[i]= float(sl[i])
-   #print dl
 
    pos_x.append(dl[1]*options.s)
    pos_y.append(dl[2]*options.s)
@@ -183,15 +187,12 @@ max_pos=[max(pos_x), max(pos_y), max(pos_z)]
 print " done."
 in_file.seek(0) #go back to the beginning of the file for the actual run
 
-#print min_error
 #print [y for y in pos_tap[][2]]
-#print min_pos
-#print max_pos
 
 
 
-###create a sphere for a point and a cube for as an errorbox
-sc= B.Scene.GetCurrent()          # get current scene
+###create a sphere for a point and a cube as errorbox
+sc= B.Scene.GetCurrent()
 
 j= 0
 while True:
@@ -201,8 +202,6 @@ while True:
    if not in_line:
       break
 
-   #print ".",
-   #sys.stdout.write(".")
    print "\r[%3d%%]" % (j*100.0/ln),
    sys.stdout.flush()
 
@@ -210,7 +209,7 @@ while True:
    if (len(in_line) == 0): #skip empty lines
       continue 
    if (in_line[0:2] == "##"): #skip lines starting with double ##
-      print "Caught comment: ", in_line
+      #print "Caught comment: ", in_line
       continue 
    if ("#fplane" in in_line): #draw the plane
       line= in_line.split() #split at white space
@@ -223,15 +222,12 @@ while True:
            
          ## Euler axis and angle representation
          N= B.Mathutils.Vector(n)
-         print N*N
          N.normalize()
-         print N*N
          
          P= B.Mathutils.Vector([0,0,1])
          P.normalize()
          #theta= N*P #angle in rad!!!
          theta= B.Mathutils.AngleBetweenVecs(N,P) #angle in deg!!!
-         print theta
          e= N.cross(P)
          
          ## Euler axis/angle -> rot-mat (Rodrigues' rotation: http://en.wikipedia.org/wiki/Rotation_formalisms_in_three_dimensions#Rotation_matrix_.E2.86.94_Euler_axis.2Fangle )
@@ -244,21 +240,17 @@ while True:
 
          ##or get matrix straight away ;-)
          rot= B.Mathutils.RotationMatrix(theta, 4, 'r', e) #angle in deg!!!
-         print rot
-         
+          
          min_ext= B.Mathutils.Vector(min_pos)
          max_ext= B.Mathutils.Vector(max_pos)
          diagonal= max_ext - min_ext
          centre= (max_ext + min_ext) / 2
          
-         #print diagonal, centre
-
          cmat= B.Mathutils.TranslationMatrix(B.Mathutils.Vector(centre.x, -centre.y, 0))
          xmat= B.Mathutils.ScaleMatrix(diagonal.x,4,B.Mathutils.Vector(1,0,0))
          ymat= B.Mathutils.ScaleMatrix(diagonal.y,4,B.Mathutils.Vector(0,1,0))
          #zmat= B.Mathutils.ScaleMatrix(dx[2],4,B.Mathutils.Vector(0,0,1))
 
-         #tmat= rot.invert() #####Order matters!!! Has to be rotZ*rotY*rotX!!!!
          tmat= xmat*ymat*rot.invert() #####Order matters!!! Has to be rotZ*rotY*rotX!!!!
 
          edge_len=1
@@ -271,9 +263,7 @@ while True:
          obn= "plane_%0.4d" % index
          ob= sc.objects.new(mplane, obn) # add a new mesh-type object to the scene
          #ob.setMatrix(ob.matrix.identity())#set identity to avoid double effect
-         ob.setMatrix(tmat)#set identity to avoid double effect
-         #print centre*B.Mathutils.Vector(n)
-         #print (centre*B.Mathutils.Vector(n))*B.Mathutils.Vector(n)
+         ob.setMatrix(tmat)
          #ob.setLocation(B.Mathutils.Vector(pos) + centre - ((centre*B.Mathutils.Vector(n))*B.Mathutils.Vector(n)))#transl obj only not the mesh
          ob.setLocation(pos[0], pos[1], pos[2])#transl obj only not the mesh
          ob.drawMode |= B.Object.DrawModes.TRANSP
@@ -310,24 +300,18 @@ while True:
 
          ## Euler axis and angle representation
          N= B.Mathutils.Vector(n)
-         print N*N
          N.normalize()
-         print N*N
          
          P= B.Mathutils.Vector([0,0,1])
          P.normalize()
          #theta= N*P #angle in rad!!!
          theta= B.Mathutils.AngleBetweenVecs(N,P) #angle in deg!!!
-         print theta
          e= N.cross(P)
          
          ##or get matrix straight away ;-)
          rot= B.Mathutils.RotationMatrix(theta, 4, 'r', e) #angle in deg!!!
-         print rot
 
-
-         tmat= rot.invert() #####Order matters!!! Has to be rotZ*rotY*rotX!!!!
-
+         tmat= rot.invert()
 
          n_mesh.materials= [mati]
          ob= scn.objects.new(n_mesh, obn)
@@ -359,8 +343,7 @@ while True:
          rot= [x for x in dl[4:13]] ##do not scale!!!
          pos= [x*options.s for x in dl[13:16]]
          
-         print "scale a,b,c:", abc
-         #print rot[0:3]
+         #print "scale a,b,c:", abc
 
          rmat= B.Mathutils.Matrix([rot[0], rot[1], rot[2], 0], [rot[3], rot[4], rot[5], 0], [rot[6], rot[7], rot[8], 0], [0,0,0,1])         
 
@@ -368,7 +351,7 @@ while True:
          ymat= B.Mathutils.ScaleMatrix(abc[1],4,B.Mathutils.Vector(0,1,0))
          zmat= B.Mathutils.ScaleMatrix(abc[2],4,B.Mathutils.Vector(0,0,1))
          
-         print "scale part of the rotation matrix:", rmat.scalePart()
+         #print "scale part of the rotation matrix:", rmat.scalePart()
          tmat= (xmat*ymat*zmat)*rmat
 
          segments=32
@@ -395,7 +378,7 @@ while True:
          ab=  [x for x in dl[1:3]] ##do not scale ab as this is fixed to h==1!!!
          rot= [x for x in dl[3:12]]##do not scale!!!
          pos= [x*options.s for x in dl[12:15]]
-         print "scale a,b:", ab
+         #print "scale a,b:", ab
 
          rrmat= B.Mathutils.Matrix([rot[0], rot[1], rot[2]], [rot[3], rot[4], rot[5]], [rot[6], rot[7], rot[8]])         
          rrmat.resize4x4()
@@ -412,7 +395,7 @@ while True:
          ymat= B.Mathutils.ScaleMatrix(ab[0],4,B.Mathutils.Vector(0,1,0)) #scaling has to be done in yz-plane if unit-cone points in x-direction
          zmat= B.Mathutils.ScaleMatrix(ab[1],4,B.Mathutils.Vector(0,0,1)) #scaling has to be done in yz-plane if unit-cone points in x-direction
          
-         print "scale part of the rotation matrix:", rmat.scalePart()
+         #print "scale part of the rotation matrix:", rmat.scalePart()
 
          tmat= (xmat*ymat*zmat)*rmat
 
@@ -436,9 +419,6 @@ while True:
    line= in_line.split() #split at white space
    if line:
       dl = map(float, line)
-   # for i in range(0, len(sl)):
-   #     dl[i]= float(sl[i])
-   #print dl
 
    index= dl[1]
    pos= [x*options.s for x in dl[1:4]]
@@ -472,8 +452,6 @@ while True:
    zmat= B.Mathutils.ScaleMatrix(dx[2],4,B.Mathutils.Vector(0,0,1))
 
    tmat= (xmat*ymat*zmat)*cmat
-   #me= ob.getData(mesh=1) #blender shows the obj. according to its matrix
-   #me.transform(tmat)#but does not apply it on the obj verts
    mbox.transform(tmat)
    obn= "errorbox_%0.4d" % index
    ob= sc.objects.new(mbox, obn) # add a new mesh-type object to the scene
