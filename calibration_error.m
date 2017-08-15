@@ -29,7 +29,7 @@ sigma=[150,150,100] * deflation_factor;
 epsilon=1e-8;
 N=20;
 niter=100;
-[Lest_mc,obj_mc,info_mc,iter_mc,nf_mc,lambda_mc,cons_mc] = \
+[Lest_mc,obj_mc,info_mc,iter_mc,nf_mc,lambda_mc,cons_mc] = ...
     goniometer_error (filename,sigma,randstate,epsilon,N,niter)
 
 function y = fobjectivefn(Lest)
