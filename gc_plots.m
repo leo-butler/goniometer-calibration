@@ -31,7 +31,7 @@ function printplot (filename,pdflatex=false,directory="figures")
     print(sprintf("%s/%s.pdf",directory,filename));
     cairolatex(sprintf("%s/%s-cltx.ltx",directory,filename));
   else
-    print("-depslatex","-tight",sprintf("%s/%s.tex",directory,filename));
+##  print("-depslatex","-tight",sprintf("%s/%s.tex",directory,filename));
     print("-dsvg","-tight",sprintf("%s/%s.svg",directory,filename));
   endif
 endfunction
@@ -59,16 +59,16 @@ axis("square");
 printplot("direction-vector-dist-pooled-square");
 
 
-## plot 3 distributions on one sheet - points
-clf("reset");
-cellfun(@(x) gc_sim_plot3(x,[-1,1,1.2]*0.3), gc5, 'UniformOutput', false);
-hold on;
-view(324.5,90-64)
-text(-700,0,85020,"dir- data");
-text(-400,-1500,85020,"dir+ data");
-text(-400,1000,85020,"pooled data");
-hold off;
-printplot("point-dist-pooled");
+## ## plot 3 distributions on one sheet - points
+## clf("reset");
+## cellfun(@(x) gc_sim_plot3(x,[-1,1,1.2]*0.3), gc5, 'UniformOutput', false);
+## hold on;
+## view(324.5,90-64)
+## text(-700,0,85020,"dir- data");
+## text(-400,-1500,85020,"dir+ data");
+## text(-400,1000,85020,"pooled data");
+## hold off;
+## printplot("point-dist-pooled");
 
 if true
   mc=mc_show_sim(3000,300);
@@ -85,10 +85,10 @@ gc_sim_plot(mc{1});
 axis("square");
 printplot("mc_sim");
 
-clf("reset");
-gc_sim_plot3(mc{1});
-view(308.5,90-47);
-printplot("mc_sim_points");
+## clf("reset");
+## gc_sim_plot3(mc{1});
+## view(308.5,90-47);
+## printplot("mc_sim_points");
 
 fig=clf("reset");
 hold on;
