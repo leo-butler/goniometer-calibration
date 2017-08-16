@@ -1,0 +1,43 @@
+mc+gc5.dat is an Octave file (text data):
+
+load mc+gc5.dat
+
+loads it into your current session. It contains:
+
+gc5 -- a cell array containing the four different goniometer estimators.
+
+     octave> fieldnames(gc5{1})
+     ans = 
+     {
+       [1,1] = files                    # files read in
+       [2,1] = choices                  # a flag for monte carlo runs
+       [3,1] = planar_line_data_str     # a cell array containing data
+       [4,1] = estimate                 # a cell structure containing *the* estimated (see below)
+       [5,1] = est                      # a cell array containing each monte carlo estimate
+       [6,1] = lest                     # a matrix whose columns are the estimated lines in est
+       [7,1] = mean                     # the mean of lest
+       [8,1] = cov                      # cov of lest
+       [9,1] = euler_coordinates        # euler angle + radius of each line in lest
+     }
+     
+
+     octave> fieldnames(gc5{1}.estimate)
+     ans = 
+     {
+       [1,1] = l                        # estimated intersection line
+       [2,1] = L                        # estimated intersections of planes
+       [3,1] = P                        # estimated planes
+       [4,1] = G                        # estimated frames
+       [5,1] = Lbar                     # mean of L
+       [6,1] = d                        # delta (thm 3.2)
+     }
+     
+     octave> fieldnames(gc5{1}.planar_line_data_str{1})
+           ans = 
+           {
+             [1,1] = z                  # focal depths
+             [2,1] = lines              # data organized by focal depth (cell array)
+             [3,1] = filename           # files from which lines are read in (cell array)
+             [4,1] = sigma              # standard deviations/measurement error
+           }
+     
