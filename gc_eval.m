@@ -23,4 +23,4 @@ toc
 extraPlots= false
 gc_plots;  # creates plots, mc
 
-save -text "data/mc+gc5.dat" mc gc5
+save -text "res/data/mc+gc5.dat" mc gc5

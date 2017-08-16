@@ -26,7 +26,7 @@
 
 1;
 
-function printplot (filename,pdflatex=false,directory="figures")
+function printplot (filename,pdflatex=false,directory="res/figures")
   if pdflatex
     print(sprintf("%s/%s.pdf",directory,filename));
     cairolatex(sprintf("%s/%s-cltx.ltx",directory,filename));
