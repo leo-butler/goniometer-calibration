@@ -52,23 +52,27 @@ set(gca,
     "ylabel","${&beta} - 90$"		#polar angle
     );
 hold off;
+if extraPlots
 printplot("direction-vector-dist-pooled");
-axis("equal");
-printplot("direction-vector-dist-pooled-equal");
 axis("square");
 printplot("direction-vector-dist-pooled-square");
+endif
+axis("equal");
+printplot("direction-vector-dist-pooled-equal");
 
 
-## ## plot 3 distributions on one sheet - points
-## clf("reset");
-## cellfun(@(x) gc_sim_plot3(x,[-1,1,1.2]*0.3), gc5, 'UniformOutput', false);
-## hold on;
-## view(324.5,90-64)
-## text(-700,0,85020,"dir- data");
-## text(-400,-1500,85020,"dir+ data");
-## text(-400,1000,85020,"pooled data");
-## hold off;
-## printplot("point-dist-pooled");
+if extraPlots
+## plot 3 distributions on one sheet - points
+clf("reset");
+cellfun(@(x) gc_sim_plot3(x,[-1,1,1.2]*0.3), gc5, 'UniformOutput', false);
+hold on;
+view(324.5,90-64)
+text(-700,0,85020,"dir- data");
+text(-400,-1500,85020,"dir+ data");
+text(-400,1000,85020,"pooled data");
+hold off;
+printplot("point-dist-pooled");
+endif
 
 if true
   mc=mc_show_sim(3000,300);
@@ -80,15 +84,17 @@ if true
   endfor
 endif
 
+if extraPlots
 clf("reset");
 gc_sim_plot(mc{1});
 axis("square");
 printplot("mc_sim");
 
-## clf("reset");
-## gc_sim_plot3(mc{1});
-## view(308.5,90-47);
-## printplot("mc_sim_points");
+clf("reset");
+gc_sim_plot3(mc{1});
+view(308.5,90-47);
+printplot("mc_sim_points");
+endif
 
 fig=clf("reset");
 hold on;
@@ -114,12 +120,14 @@ endfor
 hold off;
 printplot("euler-angle-dist");
 
+if extraPlots
 fig=clf("reset");
 hold on;
 gc_sim_plot_euler(mc{1},fig);
 cellfun(@(x) set(x,"fontsize",5),num2cell(get(fig,"children")),'UniformOutput',false)
 hold off;
 printplot("mc-euler-angle-dist4");
+endif
 
 fig=clf("reset");
 hold on;
@@ -138,6 +146,7 @@ view(65,90-35)
 hold off;
 printplot("mc-euler-angle-dist");
 
+if extraPlots
 fig=clf("reset");
 subplot(2,1,1);
 gc_plot_distance(mc{1},fig,true,0.15,[-0.005 0.14]);
@@ -145,12 +154,14 @@ subplot(2,1,2);
 gc_plot_distance(mc{1},fig,false,0.15,[70707 0.14]);
 xlim([70700 70721]);
 printplot("mc-radius2");
+endif
 
 fig=clf("reset");
 gc_plot_distance(mc{1},fig,false,0.15,[70707 0.14]);
 xlim([70700 70721]);
 printplot("mc-radius");
 
+if extraPlots
 fig=clf("reset");
 subplot(2,1,1);
 gc_plot_distance(gc5{1},fig,true,0.15,[-0.005 0.14]);
@@ -172,6 +183,7 @@ subplot(2,1,2);
 gc_plot_distance(gc5{3},fig,false,0.13,[85040 0.125]);
 xlim([85032.5 85055]);
 printplot("gc53-radius");
+endif
 
 fig=clf("reset");
 hold on;

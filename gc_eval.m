@@ -20,6 +20,7 @@ tic;
 [gc5,draws]= gc_adaptive_sim(arg_list',1e-2,[2900,3000,100],{false,false,[1,2;1,4;2,3;3,4],false});  # does the CLS-evaluation
 toc
 
+extraPlots= false
 gc_plots;  # creates plots, mc
 
-save "data/mc+gc5.dat" mc gc5
+save -text "data/mc+gc5.dat" mc gc5
