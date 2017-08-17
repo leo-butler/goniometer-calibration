@@ -1,11 +1,14 @@
 ### setting default paths of external programs
 ## 64-bit enabled octave:
 OCTAVE?=/opt/octave-4.2.0
+BLENDER?=/opt/blender-2.49b-linux-glibc236-py26-x86_64/
 
 export PATH:= $(OCTAVE)/bin:$(PATH)
+export PATH:= $(BLENDER):$(PATH)
 
 ### check existance of external programs
 EXECUTABLES = octave
+EXECUTABLES = blender
 
 K:= $(foreach exec,$(EXECUTABLES),\
 	$(if $(shell PATH=$(PATH) which $(exec)),some string,$(error "No $(exec) in PATH")))
@@ -39,6 +42,9 @@ $(addprefix res/,$(RES)) : $(DATA)
 
 res/data/pool_estimate_0%.bdat : res/data/mc+gc5.dat
 	octave-cli octave2blender.m $<
+
+res/data/%_00.blend : res/data/%.bdat blender_vis/points_cam01.blend
+	blender -b $(word 2,$^) -P render_gonio-dat.py  -- -i $< -o $@ -r 0 -g .7  -b .9 -s .001
 
 .PHONY: TAGS
 TAGS:
