@@ -1,7 +1,1 @@
-#image_# angle angle-error x x-error width width-error z
-12	80	2	600	40	350	50	83467
-13	79.6	2	386	40	334	40	83851
-14	80	2	1166	50	300	50	82811
-15	77	4	2176	40	240	60	81659
-16	80	2	1530	40	260	50	82411
-
+rawData_dir+/deg+45/deg+45_line.txt

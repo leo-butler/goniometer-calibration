@@ -1,6 +1,6 @@
 cat ../dir-/deg-45.csv ../dir+/deg-45-zyx.csv > deg-45.csv
 cat ../dir-/deg+45.csv ../dir+/deg+45-xyz.csv > deg+45.csv	
-cat ../dir-/deg+45.sigma ../dir+/deg+45-xyz.sigma > deg+45.sigma
-cat ../dir-/deg-45.sigma ../dir+/deg-45-zyx.sigma > deg-45.sigma
+# max ../dir-/deg+45.sigma ../dir+/deg+45-xyz.sigma > deg+45.sigma
+# max ../dir-/deg-45.sigma ../dir+/deg-45-zyx.sigma > deg-45.sigma
 
-I have commented out the smallest standard deviations, so we are left with the worst cases.
+removed the smallest standard deviations, so we are left with the worst cases:
