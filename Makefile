@@ -37,6 +37,9 @@ $(addprefix res/,$(RES)) : $(DATA)
 		"dir[-+]/deg[+-]*.csv"  `# pooled-a` \
 		"dir/deg[+-]*.csv"      `# pooled-b`
 
+res/data/pool_estimate_0%.bdat : res/data/mc+gc5.dat
+	octave-cli octave2blender.m $<
+
 .PHONY: TAGS
 TAGS:
 	etags --language=none --regex=@$(OCTAVE_TAGS) -o $(TAGS_FILE) *.m
