@@ -30,8 +30,12 @@ RES             += octave-figures/direction-vector-dist-pooled-equal.svg octave-
 all: res
 
 .PHONY: res
+res: res/data/pool_estimate_01_00.blend
+res: res/data/pool_estimate_02_00.blend
+res: res/data/pool_estimate_03_00.blend
+res: res/data/pool_estimate_04_00.blend
 res: res/data/mc+gc5.dat
-	sed -i 1d $< # remove header (containing timestamp) for consistent checksums
+	sed -i '/# Created by Octave/d' $< # remove header (containing timestamp) for consistent checksums
 
 $(addprefix res/,$(RES)) : $(DATA)
 	octave-cli gc_eval.m            `# CLS-eval, plots` \

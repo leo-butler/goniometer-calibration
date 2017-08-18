@@ -1,4 +1,5 @@
-## build in patterns https://git.kernel.org/pub/scm/git/git.git/tree/userdiff.c?id=HEAD # https://git-scm.com/docs/gitattributes/#_defining_a_custom_hunk_header
+## build in patterns https://git.kernel.org/pub/scm/git/git.git/tree/userdiff.c?id=HEAD # https://git-scm.com/docs/gitattributes/#_defining_a_custom_hunk_header # https://git-scm.com/docs/gitattributes/#_customizing_word_diff
 *.m	 diff=matlab
 *.oct	 diff=matlab
 *.py     diff=python
+*.bdat   diff=bdat
