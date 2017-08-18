@@ -44,11 +44,14 @@ $(addprefix res/,$(RES)) : $(DATA)
 		"dir[-+]/deg[+-]*.csv"  `# pooled-a` \
 		"dir/deg[+-]*.csv"      `# pooled-b`
 
-res/data/pool_estimate_0%.bdat : res/data/mc+gc5.dat
+res/data/pool%estimate_01.bdat \
+res/data/pool%estimate_02.bdat \
+res/data/pool%estimate_03.bdat \
+res/data/pool%estimate_04.bdat : res/data/mc+gc5.dat
 	octave-cli octave2blender.m $<
 
 res/data/%_00.blend : res/data/%.bdat blender_vis/points_cam01.blend
-	blender -b $(word 2,$^) -P render_gonio-dat.py  -- -i $< -o $@ -r 0 -g .7  -b .9 -s .001
+	blender -b $(word 2,$^) -P render_gonio-dat.py  -- -i $< -o $@ -r 0 -g .7  -b .9 -s .001 -S 10
 
 .PHONY: TAGS
 TAGS:
