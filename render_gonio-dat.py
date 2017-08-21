@@ -114,10 +114,10 @@ matplane.mode |= B.Material.Modes.ZTRANSP
 ##material for the fitted iline
 mati= B.Material.New('iline_mat')
 mati.rgbCol = [0, 0, 0]
-mati.setAlpha(0.5)
+mati.setAlpha(1)
 mati.emit = 0.6
 mati.spec = 0
-mati.mode |= B.Material.Modes.WIRE
+#mati.mode |= B.Material.Modes.WIRE
 mati.mode |= B.Material.Modes.ZTRANSP
 
 ##material for the error ellipsoid
@@ -133,8 +133,9 @@ mateell.mode |= B.Material.Modes.ZTRANSP
 mateEDC = B.Material.New('eell_mat')         
 #matplane.rgbCol = [options.r, options.g, options.b]
 mateEDC.rgbCol = [1, 1, 0]
-mateEDC.setAlpha(.5)
-mateEDC.emit = 0.8
+mateEDC.setAlpha(1)
+#mateEDC.emit = 0.8
+mateEDC.ref = 1.0 # >2.5 ~ mateEDC.diffuse_intensity
 #matb.mode |= B.Material.Modes.VCOL_PAINT
 mateEDC.mode |= B.Material.Modes.ZTRANSP
 
@@ -312,7 +313,10 @@ while True:
          ##or get matrix straight away ;-)
          rot= B.Mathutils.RotationMatrix(theta, 4, 'r', e) #angle in deg!!!
 
-         tmat= rot.invert()
+         xmat= B.Mathutils.ScaleMatrix( 0.0005,4,B.Mathutils.Vector(1,0,0))
+         ymat= B.Mathutils.ScaleMatrix( 0.0005,4,B.Mathutils.Vector(0,1,0))
+         zmat= B.Mathutils.ScaleMatrix(10     ,4,B.Mathutils.Vector(0,0,1))
+         tmat= (xmat*ymat*zmat)*rot.invert()
 
          n_mesh.materials= [mati]
          ob= scn.objects.new(n_mesh, obn)
