@@ -352,13 +352,6 @@ while True:
 
          rmat= B.Mathutils.Matrix([rot[0], rot[1], rot[2], 0], [rot[3], rot[4], rot[5], 0], [rot[6], rot[7], rot[8], 0], [0,0,0,1])         
 
-         xmat= B.Mathutils.ScaleMatrix(abc[0],4,B.Mathutils.Vector(1,0,0))
-         ymat= B.Mathutils.ScaleMatrix(abc[1],4,B.Mathutils.Vector(0,1,0))
-         zmat= B.Mathutils.ScaleMatrix(abc[2],4,B.Mathutils.Vector(0,0,1))
-         
-         #print "scale part of the rotation matrix:", rmat.scalePart()
-         tmat= (xmat*ymat*zmat)*rmat
-
          segments=32
          rings=32
          diameter=1.0 #expecting ell-axes to be full width!!!
@@ -366,12 +359,20 @@ while True:
          me= B.Mesh.Primitives.UVsphere(segments, rings, diameter)
          me.materials= [mateell]
          
-         obn= "Eellipsoid_%0.4d" % index
-         ob= sc.objects.new(me, obn) # add a new mesh-type object to the scene
+         for scale in (1, 10, 100):
+            xmat= B.Mathutils.ScaleMatrix(abc[0]*scale,4,B.Mathutils.Vector(1,0,0))
+            ymat= B.Mathutils.ScaleMatrix(abc[1]*scale,4,B.Mathutils.Vector(0,1,0))
+            zmat= B.Mathutils.ScaleMatrix(abc[2]*scale,4,B.Mathutils.Vector(0,0,1))
 
-         ob.setMatrix(tmat)#set identity to avoid double effect
-         ob.setLocation(pos[0], pos[1], pos[2])#transl obj only not the mesh
-         ob.drawMode |= B.Object.DrawModes.TRANSP
+            #print "scale part of the rotation matrix:", rmat.scalePart()
+            tmat= (xmat*ymat*zmat)*rmat
+
+            obn= "Eellipsoid-%.1f_%0.4d" % (scale, index)
+            ob= sc.objects.new(me, obn) # add a new mesh-type object to the scene
+
+            ob.setMatrix(tmat)#set identity to avoid double effect
+            ob.setLocation(pos[0], pos[1], pos[2])#transl obj only not the mesh
+            ob.drawMode |= B.Object.DrawModes.TRANSP
       continue 
 
    if ("#eEDC" in in_line): #create the EDC (error in v)
