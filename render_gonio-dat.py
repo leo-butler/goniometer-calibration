@@ -311,12 +311,12 @@ while True:
          e= N.cross(P)
          
          ##or get matrix straight away ;-)
-         rot= B.Mathutils.RotationMatrix(theta, 4, 'r', e) #angle in deg!!!
+         rot= B.Mathutils.RotationMatrix(theta, 4, 'r', e).invert() #angle in deg!!!
 
          xmat= B.Mathutils.ScaleMatrix( 0.0005,4,B.Mathutils.Vector(1,0,0))
          ymat= B.Mathutils.ScaleMatrix( 0.0005,4,B.Mathutils.Vector(0,1,0))
          zmat= B.Mathutils.ScaleMatrix(10     ,4,B.Mathutils.Vector(0,0,1))
-         tmat= (xmat*ymat*zmat)*rot.invert()
+         tmat= (xmat*ymat*zmat)*rot
 
          n_mesh.materials= [mati]
          ob= scn.objects.new(n_mesh, obn)
@@ -329,12 +329,18 @@ while True:
          me= B.Mesh.Primitives.Cylinder(32, 1, 10)
          me.materials= [mati]
 
-         obn= "ilineC_%0.4d" % index
-         ob= sc.objects.new(me, obn) # add a new mesh-type object to the scene
+         for scale in (1, 10, 100):
+            xmat= B.Mathutils.ScaleMatrix( 0.0005*scale,4,B.Mathutils.Vector(1,0,0))
+            ymat= B.Mathutils.ScaleMatrix( 0.0005*scale,4,B.Mathutils.Vector(0,1,0))
+            zmat= B.Mathutils.ScaleMatrix(10           ,4,B.Mathutils.Vector(0,0,1))
+            tmat= (xmat*ymat*zmat)*rot
 
-         ob.setMatrix(tmat)#set identity to avoid double effect
-         ob.setLocation(pos[0], pos[1], pos[2])#transl obj only not the mesh
-         ob.drawMode |= B.Object.DrawModes.TRANSP
+            obn= "ilineC-%.1f_%0.4d" % (scale, index)
+            ob= sc.objects.new(me, obn) # add a new mesh-type object to the scene
+
+            ob.setMatrix(tmat)#set identity to avoid double effect
+            ob.setLocation(pos[0], pos[1], pos[2])#transl obj only not the mesh
+            ob.drawMode |= B.Object.DrawModes.TRANSP
 
       continue 
 
