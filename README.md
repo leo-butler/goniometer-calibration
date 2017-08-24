@@ -1,0 +1,1 @@
+This is a project to estimate a single line that most closely approximates the intersection of several planes. It is applied to the problem of calibrating a goniometer. Written primarily in GNU Octave.

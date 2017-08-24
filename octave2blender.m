@@ -28,7 +28,7 @@ poolN=size(gc5,2); # # of pools
 
 for i=1:1:poolN; #iterate over all pool combinations
 
-fn=sprintf("%s_%.2d.bdat", out_fn, i);
+fn=sprintf("res/data/%s_%.2d.bdat", out_fn, i);
 [fid, msg]= fopen(fn, "w");
 
 planeN=size(gc5{i}.planar_line_data_str,2); # # of planes?

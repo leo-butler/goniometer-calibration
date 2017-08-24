@@ -1,0 +1,21 @@
+STEM data points for rotation axis evaluation:
+
+
+- mask, threshold (30) and analyse (4-infinity, only index, area and x,y) with imagej
+
+
+- make sure that the focus value in this awk-command is always set to the one of the file created! e.g.:
+
+awk 'NR==1 {print "#", "i", "x", "y", "z"} NR>1 {print $1, $3, $4, 86283}' 24_-45_50-90rot_86283_24_mt30.txt > 24_-45_50-90rot_86283_24.xyz
+
+awk 'NR==1 {print "#", "i", "x", "y", "z"} NR>1 {print $1, $3, $4, 86219}' 25_-45_50-90rot_86219_25_mt30.txt > 25_-45_50-90rot_86219_25.xyz
+
+- append_files to e.g. deg-45.xyz 
+
+- add
+
+## x,y +/- 15 (from image shift between 12_45_50-90rot_83467_12.tif and 16_45_50-90rot_82411_16.tif)
+## z +/- 130 (from height of focused parallelogram in 16_45_50-90rot_82411_16_m_t30.tif)
+
+
+

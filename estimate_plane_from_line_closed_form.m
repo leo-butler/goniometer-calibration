@@ -20,7 +20,7 @@
 ## along with this file. If not, see http://www.gnu.org/licenses/.
 ##
 
-function [P,g] = estimate_plane_from_line_closed_form \
+function [P,g] = estimate_plane_from_line_closed_form ...
       (planar_line_data,focal_plane_depths,focal_plane_normal,max_assert_error=1e-16)
   ## usage:  [P,g] = estimate_plane_from_line_closed_form
   ## (planar_line_data,focal_plane_depths,focal_plane_normal)
