@@ -83,7 +83,7 @@ fprintf(fid, "#iline\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n", i, gc5{i}.estimate.l(4:6), 
 
 pcov=gc5{i}.cov(1:3,1:3); ##same as cov(gc5{i}.lest(1:3,:)')
 [u,w]=eig(pcov);
-u= u * diag([sign(det(u)),1,1]); ##make u right-handed 
+u= u * diag([sign(dot(cross(u(:,1),u(:,2)),u(:,3))),1,1]); ##make u right-handed https://math.stackexchange.com/questions/327841/test-of-handedness # det not good: https://stackoverflow.com/a/13146750
 ##print a, b, c, rot-mat, transl vector
 fprintf(fid, "##eell:\ti\ta\tb\tc\tr11\tr12\tr13\tr21\tr22\tr23\tr31\tr32\tr33\td1\td2\td3\n");
 #fprintf(fid, "#eell\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n", i, diag(sqrt(w)), reshape(u,1,9), gc5{i}.estimate.l(1:3));
@@ -102,7 +102,7 @@ fprintf(fid, "\n");
 vest=gc5{i}.lest(4:6,:);
 cov_vest=cov(vest'); ##same as gc5{i}.cov(4:6,4:6)
 [u,w]=eig(cov_vest);
-u= u * diag([sign(det(u)),1,1]); ##make u right-handed (not the case for e.g. i==4)
+u= u * diag([sign(dot(cross(u(:,1),u(:,2)),u(:,3))),1,1]); ##make u right-handed (not the case for e.g. i==4)
 ##print a, b of ellipse rot-mat of EDC, transl vector
 fprintf(fid, "##eEDC:\ti\ta\tb\tr11\tr12\tr13\tr21\tr22\tr23\tr31\tr32\tr33\td1\td2\td3\n");
 #fprintf(fid, "#eEDC\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n", i, diag(sqrt(w))(2:3), reshape(u,1,9), gc5{i}.estimate.l(1:3));
