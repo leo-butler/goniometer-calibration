@@ -32,7 +32,7 @@ fn=sprintf("res/data/%s_%.2d.bdat", out_fn, i);
 [fid, msg]= fopen(fn, "w");
 
 planeN=size(gc5{i}.planar_line_data_str,2); # # of planes?
-pi=0; #restet point index
+pointIdx=0; #restet point index
 
 for j=1:1:planeN; #iterate over all planes
 
@@ -48,9 +48,9 @@ fprintf(fid, "##line measures: %d\n", k);
 
 pN=size(t,1); # # of points per line 
 for l=1:1:pN #iterate over all points
-pi+=1;
+pointIdx+=1;
 #t(l,:)
-fprintf(fid, "%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n", pi, t(l,:), -1*e', e');
+fprintf(fid, "%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n", pointIdx, t(l,:), -1*e', e');
 endfor #l, pN
 
 endfor #k, lpPN
