@@ -32,7 +32,7 @@ fn=sprintf("res/data/%s_%.2d.bdat", out_fn, i);
 [fid, msg]= fopen(fn, "w");
 
 planeN=size(gc5{i}.planar_line_data_str,2); # # of planes?
-pi=0; #restet point index
+pointIdx=0; #restet point index
 
 for j=1:1:planeN; #iterate over all planes
 
@@ -48,9 +48,9 @@ fprintf(fid, "##line measures: %d\n", k);
 
 pN=size(t,1); # # of points per line 
 for l=1:1:pN #iterate over all points
-pi+=1;
+pointIdx+=1;
 #t(l,:)
-fprintf(fid, "%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n", pi, t(l,:), -1*e', e');
+fprintf(fid, "%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n", pointIdx, t(l,:), -1*e', e');
 endfor #l, pN
 
 endfor #k, lpPN
@@ -83,13 +83,15 @@ fprintf(fid, "#iline\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n", i, gc5{i}.estimate.l(4:6), 
 
 pcov=gc5{i}.cov(1:3,1:3); ##same as cov(gc5{i}.lest(1:3,:)')
 [u,w]=eig(pcov);
-u= u * diag([sign(det(u)),1,1]); ##make u right-handed 
+u= u * diag([sign(dot(cross(u(:,1),u(:,2)),u(:,3))),1,1]); ##make u right-handed https://math.stackexchange.com/questions/327841/test-of-handedness # det not good: https://stackoverflow.com/a/13146750
 ##print a, b, c, rot-mat, transl vector
 fprintf(fid, "##eell:\ti\ta\tb\tc\tr11\tr12\tr13\tr21\tr22\tr23\tr31\tr32\tr33\td1\td2\td3\n");
 #fprintf(fid, "#eell\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n", i, diag(sqrt(w)), reshape(u,1,9), gc5{i}.estimate.l(1:3));
 fprintf(fid, "#eell\t%d", i);
 fprintf(fid, "\t%f", diag(sqrt(w)), reshape(u,1,9), gc5{i}.estimate.l(1:3));
 fprintf(fid, "\n");
+
+clear u w pcov
 
 ###extract data needed for oriented elliptic-error-cone (error in v)
 ##first extract a,b for ellipse
@@ -102,12 +104,25 @@ fprintf(fid, "\n");
 vest=gc5{i}.lest(4:6,:);
 cov_vest=cov(vest'); ##same as gc5{i}.cov(4:6,4:6)
 [u,w]=eig(cov_vest);
-u= u * diag([sign(det(u)),1,1]); ##make u right-handed (not the case for e.g. i==4)
+u= u * diag([sign(dot(cross(u(:,1),u(:,2)),u(:,3))),1,1]); ##make u right-handed (not the case for e.g. i==4)
+sc=to_spherical_coordinates(gc5{i}.lest(4:6,:),true);
+[covsc,eigsc]=eig(cov(sc'));
+# covsc= covsc * diag([sign(dot(cross(covsc(:,1),covsc(:,2)),covsc(:,3))),1,1]); ##make u right-handed (not the case for e.g. i==4)
+## axes of 2 stdev ellipse
+onesidepercentage=@(x,y) sum(sum(x<=abs(y)),2)/columns(x)/rows(x);
+problevel=@(p,x,w) fzero(@(y) onesidepercentage(x,y)-p,w);
+estsc=to_spherical_coordinates(gc5{i}.estimate.l(4:6),true);
+try
+  n5c=problevel(0.95,sqrt(sum((sc-estsc).*(inv(cov(sc'))*(sc-estsc)))),[0,10]);
+catch
+  n5c=norminv(0.5*(1+0.95))
+end_try_catch
+
 ##print a, b of ellipse rot-mat of EDC, transl vector
-fprintf(fid, "##eEDC:\ti\ta\tb\tr11\tr12\tr13\tr21\tr22\tr23\tr31\tr32\tr33\td1\td2\td3\n");
+fprintf(fid, "##eEDC:\ti\ta[deg]\tb[deg]\tr11\tr12\tr13\tr21\tr22\tr23\tr31\tr32\tr33\td1\td2\td3\n");
 #fprintf(fid, "#eEDC\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n", i, diag(sqrt(w))(2:3), reshape(u,1,9), gc5{i}.estimate.l(1:3));
 fprintf(fid, "#eEDC\t%d", i);
-fprintf(fid, "\t%f", diag(sqrt(w))(2:3), reshape(u,1,9), gc5{i}.estimate.l(1:3));
+fprintf(fid, "\t%f", diag(sqrt(eigsc))*n5c, reshape(u,1,9), gc5{i}.estimate.l(1:3));
 fprintf(fid, "\n");
 
 

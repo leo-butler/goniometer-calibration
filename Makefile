@@ -51,7 +51,7 @@ res/data/pool%estimate_04.bdat : res/data/mc+gc5.dat
 	octave-cli octave2blender.m $<
 
 res/data/%_00.blend : res/data/%.bdat blender_vis/points_cam01.blend
-	blender -b $(word 2,$^) -P render_gonio-dat.py  -- -i $< -o $@ -r 0 -g .7  -b .9 -s .001 -S 10
+	blender -b $(word 2,$^) -P render_gonio-dat.py  -- -i $< -o $@ -r 0 -g .7  -b .9 -s .001
 
 .PHONY: TAGS
 TAGS:

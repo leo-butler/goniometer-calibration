@@ -1,4 +1,4 @@
 ## to make use of this config run:
 ## git config --local include.path ../.gitconfig
 [diff "bdat"]
-      wordRegex = "[+-]?[0-9]"
+      wordRegex = "[^\\.[:space:]]+"
