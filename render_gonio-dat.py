@@ -402,7 +402,7 @@ while True:
          ## Or transform the rotation matrix, scale cone in xy-plane (not in yz-plane), and remove me.transform in x- and y-direction
 
          ##Cone points in z, centre @ hight/2 
-         me= B.Mesh.Primitives.Cone(32, 1.0, 1.0) ##segments, radius, height
+         me= B.Mesh.Primitives.Cone(32, 2.0, 1.0) # scaling given by octave2blender.m is for a semi-angle so radius must be 1.0 (diameter 2.0) # segments, diameter!, height
          me.materials= [mateEDC]
 
          me.transform(B.Mathutils.TranslationMatrix(B.Mathutils.Vector(0,0,.5)))
@@ -412,8 +412,8 @@ while True:
          rmat= rrmat #take rotation matrix as is, therefore create unit-cone that correctly (local-y pointing in global-y) points in x-direction; this then corresponds to the Euler-angle interpretation used in the octave code
          xmat= B.Mathutils.Matrix().identity()
          for scale in (1, 10, 100):
-            ymat= B.Mathutils.ScaleMatrix(ab[0]*scale,4,B.Mathutils.Vector(0,1,0)) #scaling has to be done in yz-plane if unit-cone points in x-direction
-            zmat= B.Mathutils.ScaleMatrix(ab[1]*scale,4,B.Mathutils.Vector(0,0,1)) #scaling has to be done in yz-plane if unit-cone points in x-direction
+            ymat= B.Mathutils.ScaleMatrix(math.tan(ab[0]/180*math.pi)*scale,4,B.Mathutils.Vector(0,1,0)) #scaling has to be done in yz-plane if unit-cone points in x-direction
+            zmat= B.Mathutils.ScaleMatrix(math.tan(ab[1]/180*math.pi)*scale,4,B.Mathutils.Vector(0,0,1)) #scaling has to be done in yz-plane if unit-cone points in x-direction
 
             #print "scale part of the rotation matrix:", rmat.scalePart()
 
