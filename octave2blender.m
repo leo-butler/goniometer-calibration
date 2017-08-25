@@ -91,6 +91,8 @@ fprintf(fid, "#eell\t%d", i);
 fprintf(fid, "\t%f", diag(sqrt(w)), reshape(u,1,9), gc5{i}.estimate.l(1:3));
 fprintf(fid, "\n");
 
+clear u w pcov
+
 ###extract data needed for oriented elliptic-error-cone (error in v)
 ##first extract a,b for ellipse
 ##second extract alpha,beta,gamma for ellipse orientation
@@ -103,11 +105,24 @@ vest=gc5{i}.lest(4:6,:);
 cov_vest=cov(vest'); ##same as gc5{i}.cov(4:6,4:6)
 [u,w]=eig(cov_vest);
 u= u * diag([sign(dot(cross(u(:,1),u(:,2)),u(:,3))),1,1]); ##make u right-handed (not the case for e.g. i==4)
+sc=to_spherical_coordinates(gc5{i}.lest(4:6,:),true);
+[covsc,eigsc]=eig(cov(sc'));
+# covsc= covsc * diag([sign(dot(cross(covsc(:,1),covsc(:,2)),covsc(:,3))),1,1]); ##make u right-handed (not the case for e.g. i==4)
+## axes of 2 stdev ellipse
+onesidepercentage=@(x,y) sum(sum(x<=abs(y)),2)/columns(x)/rows(x);
+problevel=@(p,x,w) fzero(@(y) onesidepercentage(x,y)-p,w);
+estsc=to_spherical_coordinates(gc5{i}.estimate.l(4:6),true);
+try
+  n5c=problevel(0.95,sqrt(sum((sc-estsc).*(inv(cov(sc'))*(sc-estsc)))),[0,10]);
+catch
+  n5c=norminv(0.5*(1+0.95))
+end_try_catch
+
 ##print a, b of ellipse rot-mat of EDC, transl vector
-fprintf(fid, "##eEDC:\ti\ta\tb\tr11\tr12\tr13\tr21\tr22\tr23\tr31\tr32\tr33\td1\td2\td3\n");
+fprintf(fid, "##eEDC:\ti\ta[deg]\tb[deg]\tr11\tr12\tr13\tr21\tr22\tr23\tr31\tr32\tr33\td1\td2\td3\n");
 #fprintf(fid, "#eEDC\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n", i, diag(sqrt(w))(2:3), reshape(u,1,9), gc5{i}.estimate.l(1:3));
 fprintf(fid, "#eEDC\t%d", i);
-fprintf(fid, "\t%f", diag(sqrt(w))(2:3), reshape(u,1,9), gc5{i}.estimate.l(1:3));
+fprintf(fid, "\t%f", diag(sqrt(eigsc))*n5c, reshape(u,1,9), gc5{i}.estimate.l(1:3));
 fprintf(fid, "\n");
 
 
