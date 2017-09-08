@@ -22,7 +22,7 @@ INTERSECTION_LINE_TGZ := intersection_line.tar.gz
 INTERSECTION_LINE_DEPS:= Makefile objectivefn.m line_estimator_error.m make_almost_planar_data.m line_plot.m octave.tags randstate.m ifelse.m read_goniometer_data.m goniometer.m
 DATA		:= dir-/deg_0.csv dir+/deg_0-xyz.csv dir-/deg-45.csv dir-/deg+45.csv dir/deg-45.csv dir/deg+45.csv dir+/deg+45-xyz.csv dir+/deg-45-zyx.csv
 RES             := data/mc+gc5.dat
-RES             += octave-figures/direction-vector-dist-pooled-equal.svg octave-figures/euler-angle-dist.svg octave-figures/gc-radius.svg octave-figures/mc-euler-angle-dist.svg octave-figures/mc-radius.svg
+RES             += figures/direction-vector-dist-pooled-equal.svg figures/euler-angle-dist.svg figures/gc-radius.svg figures/mc-euler-angle-dist.svg figures/mc-radius.svg
 
 
 
@@ -34,10 +34,15 @@ res: res/data/pool_estimate_01_00.blend
 res: res/data/pool_estimate_02_00.blend
 res: res/data/pool_estimate_03_00.blend
 res: res/data/pool_estimate_04_00.blend
+res: res/figures/direction-vector-dist-pooled-equal.svg
+res: res/figures/euler-angle-dist.svg
+res: res/figures/gc-radius.svg
+res: res/figures/mc-euler-angle-dist.svg
+res: res/figures/mc-radius.svg
 res: res/data/mc+gc5.dat
 	sed -i '/# Created by Octave/d' $< # remove header (containing timestamp) for consistent checksums
 
-$(addprefix res/,$(RES)) : $(DATA)
+$(addprefix res%,$(RES)) : $(DATA) # res% instead of res/ for multi-res rule
 	octave-cli gc_eval.m            `# CLS-eval, plots` \
 		"dir-/deg[+-]*.csv"     `# clockwise` \
 		"dir+/deg[+-]*.csv"     `# anti-clockwise` \
