@@ -77,25 +77,25 @@ endfunction
 
 print_to_file(
   print_cell_array(gc5,@(gc) print_cell_array(gc.estimate.l,@(x,y) sprintf("%s%s",printflt(x),y),' & '," \\\\\n")),
-  "gc-est_Euclid.tab");
+  "res/tables/gc-est_Euclid.tab");
 
 print_to_file(
   print_cell_array(gc5,@(gc) print_cell_array(euler_coordinates(gc.estimate.l,true),@(x,y) sprintf("%s%s",printflt(x),y),' & '," \\\\\n")),
-  "gc-est_Euler.tab");
+  "res/tables/gc-est_Euler.tab");
 
 print_to_file(
   print_cell_array(mc,@(gc) print_cell_array(gc.estimate.l,@(x,y) sprintf("%s%s",printflt(x),y),' & '," \\\\\n")),
-  "ec-est_1.tab");
+  "res/tables/ec-est_1.tab");
 
 print_to_file(
   print_cell_array(mc,@(gc) print_cell_array(euler_coordinates(gc.estimate.l,true),@(x,y) sprintf("%s%s",printflt(x),y),' & '," \\\\\n")),
-  "ec-est_2.tab");
+  "res/tables/ec-est_2.tab");
 
 # print_cell_array(mat2fullcell(mc{1}.cov), @(a,b) sprintf("%s%s",printflt(a),b))
 
 print_to_file(
   print_cell_array(mat2fullcell(cov(mc{1}.euler_coordinates_angles')), @(a,b) sprintf("%s%s",printflt(a,0),b)),
-  "ec-est_3.tab");
+  "res/tables/ec-est_3.tab");
 
 # cellfun(@(gc) print_cell_array(mat2fullcell(cov(gc.euler_coordinates_angles')), @(a,b) sprintf("%s%s",printflt(a,2),b)), gc5,'UniformOutput', false)
 
@@ -128,7 +128,7 @@ v=sqrt(v);
 printdiag(v,@(x) printflt(x+0,1))
 print_to_file(
   printmat(round(100*u')/100,@(x) sprintf("%.1f",x+0),0),
-  "ec-est_4.tab");
+  "res/tables/ec-est_4.tab");
 
 for i=1:length(gc5)
   [u,v]=eig(cov(gc5{i}.euler_coordinates_angles'));
@@ -136,7 +136,7 @@ for i=1:length(gc5)
   printdiag(v,@(x) printflt(x+0,1))
   print_to_file(
       printmat(round(100*u')/100,@(x) sprintf("%.1f",x+0),0),
-      sprintf("gc-est-pc_%d.tab", i));
+      sprintf("res/tables/gc-est-pc_%d.tab", i));
 endfor
 
 %!test

@@ -23,6 +23,7 @@ INTERSECTION_LINE_DEPS:= Makefile objectivefn.m line_estimator_error.m make_almo
 DATA		:= dir-/deg_0.csv dir+/deg_0-xyz.csv dir-/deg-45.csv dir-/deg+45.csv dir/deg-45.csv dir/deg+45.csv dir+/deg+45-xyz.csv dir+/deg-45-zyx.csv
 RES             := data/mc+gc5.dat
 RES             += figures/direction-vector-dist-pooled-equal.svg figures/euler-angle-dist.svg figures/gc-radius.svg figures/mc-euler-angle-dist.svg figures/mc-radius.svg
+RES             := tables/gc-est_Euclid.tab tables/gc-est_Euler.tab  tables/gc-est-pc_1.tab tables/gc-est-pc_2.tab tables/gc-est-pc_3.tab tables/gc-est-pc_4.tab  tables/ec-est_1.tab tables/ec-est_2.tab tables/ec-est_3.tab tables/ec-est_4.tab
 
 
 
@@ -39,6 +40,16 @@ res: res/figures/euler-angle-dist.svg
 res: res/figures/gc-radius.svg
 res: res/figures/mc-euler-angle-dist.svg
 res: res/figures/mc-radius.svg
+res: res/tables/gc-est_Euclid.tab
+res: res/tables/gc-est_Euler.tab
+res: res/tables/gc-est-pc_1.tab
+res: res/tables/gc-est-pc_2.tab
+res: res/tables/gc-est-pc_3.tab
+res: res/tables/gc-est-pc_4.tab
+res: res/tables/ec-est_1.tab
+res: res/tables/ec-est_2.tab
+res: res/tables/ec-est_3.tab
+res: res/tables/ec-est_4.tab
 res: res/data/mc+gc5.dat
 	sed -i '/# Created by Octave/d' $< # remove header (containing timestamp) for consistent checksums
 
