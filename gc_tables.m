@@ -35,7 +35,7 @@ for i=1:length(mc)
   mc{i}.euler_coordinates_angles(4,:)=mc{i}.euler_coordinates(4,:);
 endfor
 
-function s = printflt (x,p=4)
+function s = printflt (x,p=9)
   s=sprintf(sprintf("%%.%ge",p),x);
 endfunction
 
