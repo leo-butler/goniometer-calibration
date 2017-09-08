@@ -36,11 +36,7 @@ for i=1:length(mc)
 endfor
 
 function s = printflt (x,p=4)
-  if abs(x)<10.0 && abs(x)>1.0
-    s=sprintf(sprintf("%%.%gf",p),x);
-  else
-    s=sprintf("%s",regexprep(sprintf(sprintf("%%.%ge",p),x),'e[+]?(-)?0?([0-9]+)',' \ttime{10^{$1$2}}'));
-  endif
+  s=sprintf(sprintf("%%.%ge",p),x);
 endfunction
 
 function s = print_cell_array(c,printer=@(a,b) sprintf("%s%s",a,b),inter=' & ',ender=" \\\\\n") # '
