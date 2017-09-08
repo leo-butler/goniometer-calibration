@@ -66,25 +66,25 @@ function print_to_file(s, fn)
   fputs(fid, s);
   fclose(fid);
 endfunction
-						    
-			      
+
+
 # print_cell_array(map(@(x) printflt(x), gc5{1}.estimate.l,'UniformOutput',false))
 # print_cell_array(gc5{1}.estimate.l,@(x,y) sprintf("%s%s",printflt(x),y)),
 
 print_to_file(
-  print_cell_array(gc5,@(gc) print_cell_array(gc.estimate.l,@(x,y) sprintf("%s%s",printflt(x),y),' & '," \\\\\n")),
+  print_cell_array(gc5,@(gc) print_cell_array(gc.estimate.l,@(x,y) sprintf("%s%s",printflt(x),y),' & '," \n")),
   "res/tables/gc-est_Euclid.tab");
 
 print_to_file(
-  print_cell_array(gc5,@(gc) print_cell_array(euler_coordinates(gc.estimate.l,true),@(x,y) sprintf("%s%s",printflt(x),y),' & '," \\\\\n")),
+  print_cell_array(gc5,@(gc) print_cell_array(euler_coordinates(gc.estimate.l,true),@(x,y) sprintf("%s%s",printflt(x),y),' & '," \n")),
   "res/tables/gc-est_Euler.tab");
 
 print_to_file(
-  print_cell_array(mc,@(gc) print_cell_array(gc.estimate.l,@(x,y) sprintf("%s%s",printflt(x),y),' & '," \\\\\n")),
+  print_cell_array(mc,@(gc) print_cell_array(gc.estimate.l,@(x,y) sprintf("%s%s",printflt(x),y),' & '," \n")),
   "res/tables/ec-est_1.tab");
 
 print_to_file(
-  print_cell_array(mc,@(gc) print_cell_array(euler_coordinates(gc.estimate.l,true),@(x,y) sprintf("%s%s",printflt(x),y),' & '," \\\\\n")),
+  print_cell_array(mc,@(gc) print_cell_array(euler_coordinates(gc.estimate.l,true),@(x,y) sprintf("%s%s",printflt(x),y),' & '," \n")),
   "res/tables/ec-est_2.tab");
 
 # print_cell_array(mat2fullcell(mc{1}.cov), @(a,b) sprintf("%s%s",printflt(a),b))
@@ -96,7 +96,7 @@ print_to_file(
 # cellfun(@(gc) print_cell_array(mat2fullcell(cov(gc.euler_coordinates_angles')), @(a,b) sprintf("%s%s",printflt(a,2),b)), gc5,'UniformOutput', false)
 
 
-function s = printdiag (x,printer,inter='&',ender="\\\\\n") # '
+function s = printdiag (x,printer,inter='&',ender="\n") # '
   s='& '; # '
   r=rows(x);
   for i=1:(r-1)
@@ -105,7 +105,7 @@ function s = printdiag (x,printer,inter='&',ender="\\\\\n") # '
   s=strcat(s, printer(x(r,r)), ender);
 endfunction
 
-function s = printmat (x,printer,sym=1,inter='&',ender="\\\\\n")
+function s = printmat (x,printer,sym=1,inter='&',ender="\n")
   s='';
   r=rows(x);
   for i=1:r
