@@ -3,3 +3,4 @@
 *.oct	 diff=matlab
 *.py     diff=python
 *.bdat   diff=bdat
+*.tab    diff=tab
