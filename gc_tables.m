@@ -64,7 +64,7 @@ function s = print_cell_array(c,printer=@(a,b) sprintf("%s%s",a,b),inter=' & ',e
 endfunction
 mat2fullcell=@(mat) cellfun(@(x) mat2cell(x,[1],ones(columns(mat),1)), mat2cell(mat,ones(rows(mat),1),[columns(mat)]), 'UniformOutput',false);
 
-print_cell_array(map(@(x) printflt(x), gc5{1}.estimate.l,'UniformOutput',false))
+# print_cell_array(map(@(x) printflt(x), gc5{1}.estimate.l,'UniformOutput',false))
 print_cell_array(gc5{1}.estimate.l,@(x,y) sprintf("%s%s",printflt(x),y))
 
 print_cell_array(gc5,@(gc) print_cell_array(gc.estimate.l,@(x,y) sprintf("%s%s",printflt(x),y),' & '," \\\\\n"))
