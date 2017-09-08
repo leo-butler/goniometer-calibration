@@ -43,8 +43,8 @@ function s = printflt (x,p=4)
   endif
 endfunction
 
-function s = print_cell_array(c,printer=@(a,b) sprintf("%s%s",a,b),inter=' & ',ender=" \\\\\n")
-  s='';
+function s = print_cell_array(c,printer=@(a,b) sprintf("%s%s",a,b),inter=' & ',ender=" \\\\\n") # '
+  s=''; 
   if ismatrix(c)
     c=num2cell(c);
   endif
@@ -62,31 +62,53 @@ function s = print_cell_array(c,printer=@(a,b) sprintf("%s%s",a,b),inter=' & ',e
     s=strcat(s, printer(c{i},ender));
   endif
 endfunction
+
 mat2fullcell=@(mat) cellfun(@(x) mat2cell(x,[1],ones(columns(mat),1)), mat2cell(mat,ones(rows(mat),1),[columns(mat)]), 'UniformOutput',false);
 
+function print_to_file(s, fn)
+  fid= fopen(fn, 'w');
+  fputs(fid, s);
+  fclose(fid);
+endfunction
+						    
+			      
 # print_cell_array(map(@(x) printflt(x), gc5{1}.estimate.l,'UniformOutput',false))
-print_cell_array(gc5{1}.estimate.l,@(x,y) sprintf("%s%s",printflt(x),y))
+# print_cell_array(gc5{1}.estimate.l,@(x,y) sprintf("%s%s",printflt(x),y)),
 
-print_cell_array(gc5,@(gc) print_cell_array(gc.estimate.l,@(x,y) sprintf("%s%s",printflt(x),y),' & '," \\\\\n"))
-print_cell_array(gc5,@(gc) print_cell_array(euler_coordinates(gc.estimate.l,true),@(x,y) sprintf("%s%s",printflt(x),y),' & '," \\\\\n"))
+print_to_file(
+  print_cell_array(gc5,@(gc) print_cell_array(gc.estimate.l,@(x,y) sprintf("%s%s",printflt(x),y),' & '," \\\\\n")),
+  "gc-est_Euclid.tab");
 
-print_cell_array(mc,@(gc) print_cell_array(gc.estimate.l,@(x,y) sprintf("%s%s",printflt(x),y),' & '," \\\\\n"))
-print_cell_array(mc,@(gc) print_cell_array(euler_coordinates(gc.estimate.l,true),@(x,y) sprintf("%s%s",printflt(x),y),' & '," \\\\\n"))
+print_to_file(
+  print_cell_array(gc5,@(gc) print_cell_array(euler_coordinates(gc.estimate.l,true),@(x,y) sprintf("%s%s",printflt(x),y),' & '," \\\\\n")),
+  "gc-est_Euler.tab");
 
-print_cell_array(mat2fullcell(mc{1}.cov), @(a,b) sprintf("%s%s",printflt(a),b))
-print_cell_array(mat2fullcell(cov(mc{1}.euler_coordinates_angles')), @(a,b) sprintf("%s%s",printflt(a,0),b))
+print_to_file(
+  print_cell_array(mc,@(gc) print_cell_array(gc.estimate.l,@(x,y) sprintf("%s%s",printflt(x),y),' & '," \\\\\n")),
+  "ec-est_1.tab");
 
-cellfun(@(gc) print_cell_array(mat2fullcell(cov(gc.euler_coordinates_angles')), @(a,b) sprintf("%s%s",printflt(a,2),b)), gc5,'UniformOutput', false)
+print_to_file(
+  print_cell_array(mc,@(gc) print_cell_array(euler_coordinates(gc.estimate.l,true),@(x,y) sprintf("%s%s",printflt(x),y),' & '," \\\\\n")),
+  "ec-est_2.tab");
+
+# print_cell_array(mat2fullcell(mc{1}.cov), @(a,b) sprintf("%s%s",printflt(a),b))
+
+print_to_file(
+  print_cell_array(mat2fullcell(cov(mc{1}.euler_coordinates_angles')), @(a,b) sprintf("%s%s",printflt(a,0),b)),
+  "ec-est_3.tab");
+
+# cellfun(@(gc) print_cell_array(mat2fullcell(cov(gc.euler_coordinates_angles')), @(a,b) sprintf("%s%s",printflt(a,2),b)), gc5,'UniformOutput', false)
 
 
-function s = printdiag (x,printer,inter='&',ender="\\\\\n")
-  s='& ';
+function s = printdiag (x,printer,inter='&',ender="\\\\\n") # '
+  s='& '; # '
   r=rows(x);
   for i=1:(r-1)
     s=strcat(s, printer(x(i,i)), inter);
   endfor
   s=strcat(s, printer(x(r,r)), ender);
 endfunction
+
 function s = printmat (x,printer,sym=1,inter='&',ender="\\\\\n")
   s='';
   r=rows(x);
@@ -100,15 +122,21 @@ function s = printmat (x,printer,sym=1,inter='&',ender="\\\\\n")
     s=strcat(s, printer(x(i,r)), ender);  
   endfor
 endfunction
+
 [u,v]=eig(cov(mc{1}.euler_coordinates_angles'));
 v=sqrt(v);
 printdiag(v,@(x) printflt(x+0,1))
-printmat(round(100*u')/100,@(x) sprintf("%.1f",x+0),0)
+print_to_file(
+  printmat(round(100*u')/100,@(x) sprintf("%.1f",x+0),0),
+  "ec-est_4.tab");
+
 for i=1:length(gc5)
   [u,v]=eig(cov(gc5{i}.euler_coordinates_angles'));
   v=sqrt(v);
   printdiag(v,@(x) printflt(x+0,1))
-  printmat(round(100*u')/100,@(x) sprintf("%.1f",x+0),0)
+  print_to_file(
+      printmat(round(100*u')/100,@(x) sprintf("%.1f",x+0),0),
+      sprintf("gc-est-pc_%d.tab", i));
 endfor
 
 %!test
