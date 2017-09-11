@@ -97,12 +97,11 @@ print_to_file(
 
 
 function s = printdiag (x,printer,inter='&',ender="\n") # '
-  s='& '; # '
+  s=''; # '
   r=rows(x);
-  for i=1:(r-1)
-    s=strcat(s, printer(x(i,i)), inter);
+  for i=1:(r)
+    s=strcat(s, printer(x(i,i)), ender);
   endfor
-  s=strcat(s, printer(x(r,r)), ender);
 endfunction
 
 function s = printmat (x,printer,sym=1,inter='&',ender="\n")
@@ -121,7 +120,9 @@ endfunction
 
 [u,v]=eig(cov(mc{1}.euler_coordinates_angles'));
 v=sqrt(v);
-printdiag(v,@(x) printflt(x+0,1))
+print_to_file(
+  printdiag(v,@(x) printflt(x+0,1)),
+  "res/tables/ec-est_4D.tab");
 print_to_file(
   printmat(round(100*u')/100,@(x) sprintf("%.1f",x+0),0),
   "res/tables/ec-est_4.tab");
@@ -129,7 +130,9 @@ print_to_file(
 for i=1:length(gc5)
   [u,v]=eig(cov(gc5{i}.euler_coordinates_angles'));
   v=sqrt(v);
-  printdiag(v,@(x) printflt(x+0,1))
+  print_to_file(
+      printdiag(v,@(x) printflt(x+0,1)),
+      sprintf("res/tables/gc-est-pc_%dD.tab", i));
   print_to_file(
       printmat(round(100*u')/100,@(x) sprintf("%.1f",x+0),0),
       sprintf("res/tables/gc-est-pc_%d.tab", i));
