@@ -23,7 +23,7 @@ INTERSECTION_LINE_DEPS:= Makefile objectivefn.m line_estimator_error.m make_almo
 DATA		:= dir-/deg_0.csv dir+/deg_0-xyz.csv dir-/deg-45.csv dir-/deg+45.csv dir/deg-45.csv dir/deg+45.csv dir+/deg+45-xyz.csv dir+/deg-45-zyx.csv
 RES             := data/mc+gc5.dat
 RES             += figures/direction-vector-dist-pooled-equal.svg figures/euler-angle-dist.svg figures/gc-radius.svg figures/mc-euler-angle-dist.svg figures/mc-radius.svg
-RES             := tables/gc-est_Euclid.tab tables/gc-est_Euler.tab  tables/gc-est-pc_1.tab tables/gc-est-pc_2.tab tables/gc-est-pc_3.tab tables/gc-est-pc_4.tab  tables/ec-est_1.tab tables/ec-est_2.tab tables/ec-est_3.tab tables/ec-est_4.tab
+RES             += tables/gc-est_Euclid.tab tables/gc-est_Euler.tab  tables/gc-est-pc_1.tab tables/gc-est-pc_2.tab tables/gc-est-pc_3.tab tables/gc-est-pc_4.tab  tables/ec-est_1.tab tables/ec-est_2.tab tables/ec-est_3.tab tables/ec-est_4.tab
 
 
 
