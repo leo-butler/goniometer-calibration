@@ -61,6 +61,7 @@ $(addprefix res%,$(RES)) : $(DATA) # res% instead of res/ for multi-res rule
 		"dir+/deg[+-]*.csv"     `# anti-clockwise` \
 		"dir[-+]/deg[+-]*.csv"  `# pooled-a` \
 		"dir/deg[+-]*.csv"      `# pooled-b`
+	@test -f $@ # octave failures not necessarily passed to make
 
 res/tables/gc%data.tab :
 	-rm $@

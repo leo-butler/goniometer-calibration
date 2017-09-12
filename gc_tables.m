@@ -41,7 +41,7 @@ endfunction
 
 function s = print_cell_array(c,printer=@(a,b) sprintf("%s%s",a,b),inter=' & ',ender=" \\\\\n") # '
   s=''; 
-  if ismatrix(c)
+  if ! iscell(c) && ismatrix(c)
     c=num2cell(c);
   endif
   for i=1:(length(c)-1)
