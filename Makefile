@@ -40,6 +40,8 @@ res: res/figures/euler-angle-dist.svg
 res: res/figures/gc-radius.svg
 res: res/figures/mc-euler-angle-dist.svg
 res: res/figures/mc-radius.svg
+res: res/tables/gc-data.tab
+res: res/tables/gc+data.tab
 res: res/tables/gc-est_Euclid.tab
 res: res/tables/gc-est_Euler.tab
 res: res/tables/gc-est-pc_1.tab
@@ -59,6 +61,15 @@ $(addprefix res%,$(RES)) : $(DATA) # res% instead of res/ for multi-res rule
 		"dir+/deg[+-]*.csv"     `# anti-clockwise` \
 		"dir[-+]/deg[+-]*.csv"  `# pooled-a` \
 		"dir/deg[+-]*.csv"      `# pooled-b`
+
+res/tables/gc%data.tab :
+	-rm $@
+	{ for i in 0 -45 +45 ; do \
+	  printf "%s & %s & %s\n" \
+	  `echo $$i` \
+	  `grep -v '^#' dir$*/deg*$$i*.csv | wc -l` \
+	  `grep '^#.i.x.y.z' dir$*/deg*$$i*.csv | wc -l` ; \
+	done; } >> $@
 
 res/data/pool%estimate_01.bdat \
 res/data/pool%estimate_02.bdat \
