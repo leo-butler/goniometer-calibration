@@ -24,3 +24,5 @@ extraPlots= false
 gc_plots;  # creates plots, mc
 
 save -text "res/data/mc+gc5.dat" mc gc5
+
+gc_tables;  # creates tables

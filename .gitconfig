@@ -2,3 +2,6 @@
 ## git config --local include.path ../.gitconfig
 [diff "bdat"]
       wordRegex = "[^\\.[:space:]]+"
+
+[diff "tab"]
+      wordRegex = "e[-\\+][^[:space:]]|[0-9]|[^[:space:]]|[\\xc0-\\xff][\\x80-\\xbf]+"    # https://stackoverflow.com/questions/30428377/what-are-git-diff-word-diff-default-regexps#30428687
